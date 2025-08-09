@@ -244,6 +244,23 @@
 .x1{left:338.021644pt;}
 .x3{left:408.000014pt;}
 }
+   .header {
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #ddd;
+  }
+  .header a {
+    text-decoration: none;
+    color: #007bff;
+    margin: 0 10px;
+    font-weight: bold;
+  }
+  .header a:hover {
+    text-decoration: underline;
+  }
 </style>
 <script>
 /*
@@ -288,9 +305,14 @@ try{
 pdf2htmlEX.defaultViewer = new pdf2htmlEX.Viewer({});
 }catch(e){}
 </script>
-<title><a href="index.html">1-page</a> | <a href="2.html">2-page</a></title>
+<title>Ivan Ivanov - CV</title>
+ <a href="index.html">1-page</a> | <a href="2.html">2-page</a>
 </head>
 <body>
+ <div class="header">
+  <a href="index.html">1-page CV</a> |
+  <a href="2.html">2-page CV</a>
+</div>
 <div id="sidebar">
 <div id="outline">
 </div>
