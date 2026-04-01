@@ -26,16 +26,15 @@ type LessMode = {
 };
 
 const WELCOME = `\
-  _____                    _             _    ____ __     __
- |_   _|__ _ __ _ __ ___ (_)_ __   __ _| |  / /  \\ \\   / /
-   | |/ _ \\ '__| '_ \` _ \\| | '_ \\ / _\` | | / /    \\ \\ / /
-   | |  __/ |  | | | | | | | | | | (_| | |/ /      \\ V /
-   |_|\\___|_|  |_| |_| |_|_|_| |_|\\__,_|_/_/        \\_/
+ ____ ____ ____ ____ ____ ____ ____ ____ ____ ____ 
+||M |||y |||T |||e |||r |||m |||i |||n |||a |||l ||
+||__|||__|||__|||__|||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
 
 Welcome! Type 'help' for available commands or 'ls' to explore.`;
 
 function getPrompt(path: string): string {
-  return `visitor@terminal-cv:${displayPath(path)}$`;
+  return `guest@ivan-term:${displayPath(path)}$`;
 }
 
 export default function Terminal() {
