@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const require: any;
 
 const context = require.context("../../content/posts/2024", false, /\.md$/);
