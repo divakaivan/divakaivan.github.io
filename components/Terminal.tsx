@@ -346,8 +346,6 @@ function OutputLine({ output }: { output: OutputEntry }) {
           <MarkdownRenderer content={output.content} />
         </div>
       );
-    case "bat":
-      return <BatOutput content={output.content} filename={output.filename} />;
     case "ls":
       return (
         <div className="mt-1 mb-1 flex flex-wrap gap-x-6 gap-y-1">
@@ -368,64 +366,5 @@ function OutputLine({ output }: { output: OutputEntry }) {
     default:
       return null;
   }
-}
-
-function BatOutput({ content, filename }: { content: string; filename: string }) {
-  const lines = content.split("\n");
-  const lineCount = lines.length;
-
-  // Detect language from filename extension
-  const ext = filename.split(".").pop() ?? "";
-  const langMap: Record<string, string> = {
-    md: "markdown",
-    ts: "typescript",
-    tsx: "tsx",
-    js: "javascript",
-    jsx: "jsx",
-    py: "python",
-    sh: "bash",
-    json: "json",
-    yaml: "yaml",
-    yml: "yaml",
-    css: "css",
-    html: "html",
-    sql: "sql",
-  };
-  const language = langMap[ext] ?? "text";
-
-  return (
-    <div className="mt-2 mb-3 font-mono text-xs">
-      {/* bat-style header */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-[#1e2433] border border-gray-700 border-b-0 rounded-t text-gray-400">
-        <span className="text-yellow-400">🦇</span>
-        <span className="text-white font-semibold">{filename}</span>
-        <span className="ml-auto text-gray-500">{lineCount} lines</span>
-      </div>
-
-      {/* Line-numbered code */}
-      <div className="relative border border-gray-700 rounded-b overflow-hidden">
-        <SyntaxHighlighter
-          language={language}
-          style={vscDarkPlus}
-          showLineNumbers
-          lineNumberStyle={{
-            color: "#4b5563",
-            minWidth: "2.5em",
-            paddingRight: "1em",
-            userSelect: "none",
-          }}
-          customStyle={{
-            margin: 0,
-            borderRadius: 0,
-            fontSize: "0.8em",
-            background: "#0d1117",
-          }}
-          wrapLongLines
-        >
-          {content}
-        </SyntaxHighlighter>
-      </div>
-    </div>
-  );
 }
 
