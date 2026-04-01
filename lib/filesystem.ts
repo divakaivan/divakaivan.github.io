@@ -18,7 +18,17 @@ export type FileSystemNode = FileNode | DirectoryNode;
 export const filesystem: DirectoryNode = {
   type: "directory",
   children: {
-    whoami: { type: "file", content: whoami },
+    usr: {
+      type: "directory",
+      children: {
+        bin: {
+          type: "directory",
+          children: {
+            whoami: { type: "file", content: whoami },
+          },
+        },
+      },
+    },
     "2024": {
       type: "directory",
       children: Object.fromEntries(
