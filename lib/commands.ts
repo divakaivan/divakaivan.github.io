@@ -4,11 +4,13 @@ export type OutputEntry =
   | { type: "text"; content: string }
   | { type: "markdown"; content: string }
   | { type: "error"; content: string }
-  | { type: "ls"; items: { name: string; isDir: boolean }[] };
+  | { type: "ls"; items: { name: string; isDir: boolean }[] }
+  | { type: "bat"; content: string; filename: string };
 
 export type CommandResult = {
   output: OutputEntry[];
   newPath?: string;
+  lessContent?: { content: string; filename: string };
 };
 
 const HELP_TEXT = `Available commands:
@@ -16,6 +18,8 @@ const HELP_TEXT = `Available commands:
   help          Show this help message
   ls [path]     List directory contents
   cat <file>    Display file contents (markdown rendered)
+  bat <file>    Display file with syntax highlighting + line numbers
+  less <file>   Page through a file  (q: quit, space/f: forward, b: back)
   cd <dir>      Change directory
   pwd           Print working directory
   whoami        Display personal information
@@ -24,7 +28,9 @@ const HELP_TEXT = `Available commands:
 Tips:
   • Use ↑ / ↓ arrow keys to navigate command history
   • Press Tab to autocomplete file and directory names
-  • Try: ls → cat whoami → ls projects/ → cat projects/terminal-cv.md`;
+  • Try: ls → cat whoami → ls projects/ → less projects/terminal-cv.md`;
+
+const COMMANDS = ["help", "ls", "cat", "bat", "less", "cd", "pwd", "whoami", "clear"];
 
 export function executeCommand(
   command: string,
@@ -110,6 +116,72 @@ export function executeCommand(
       return { output: [{ type: "markdown", content: node.content }] };
     }
 
+    case "bat": {
+      if (!args[0]) {
+        return {
+          output: [{ type: "error", content: "bat: missing file operand" }],
+        };
+      }
+
+      const target = resolvePath(currentPath, args[0]);
+      const node = getNode(target);
+
+      if (!node) {
+        return {
+          output: [
+            {
+              type: "error",
+              content: `bat: ${args[0]}: No such file or directory`,
+            },
+          ],
+        };
+      }
+
+      if (node.type === "directory") {
+        return {
+          output: [
+            { type: "error", content: `bat: ${args[0]}: Is a directory` },
+          ],
+        };
+      }
+
+      const filename = args[0].split("/").pop() ?? args[0];
+      return { output: [{ type: "bat", content: node.content, filename }] };
+    }
+
+    case "less": {
+      if (!args[0]) {
+        return {
+          output: [{ type: "error", content: "less: missing file operand" }],
+        };
+      }
+
+      const target = resolvePath(currentPath, args[0]);
+      const node = getNode(target);
+
+      if (!node) {
+        return {
+          output: [
+            {
+              type: "error",
+              content: `less: ${args[0]}: No such file or directory`,
+            },
+          ],
+        };
+      }
+
+      if (node.type === "directory") {
+        return {
+          output: [
+            { type: "error", content: `less: ${args[0]}: Is a directory` },
+          ],
+        };
+      }
+
+      const filename = args[0].split("/").pop() ?? args[0];
+      return { output: [], lessContent: { content: node.content, filename } };
+    }
+
     case "cd": {
       const target = !args[0] || args[0] === "~" ? "/" : resolvePath(currentPath, args[0]);
       const node = getNode(target);
@@ -165,10 +237,7 @@ export function getCompletions(
 
   // Completing the command name (first token, no space yet)
   if (parts.length === 1) {
-    const commands = ["help", "ls", "cat", "cd", "pwd", "whoami", "clear"];
-    return commands
-      .filter((cmd) => cmd.startsWith(parts[0]))
-      .map((cmd) => cmd);
+    return COMMANDS.filter((cmd) => cmd.startsWith(parts[0]));
   }
 
   // Completing a path argument
@@ -204,3 +273,4 @@ export function commonPrefix(strings: string[]): string {
   }
   return prefix;
 }
+
