@@ -26,8 +26,7 @@ const HELP_TEXT = `Available commands:
 Tips:
   • Use ↑ / ↓ arrow keys to navigate command history
   • Press Tab to autocomplete file and directory names
-  • Try: whoami → ls projects/ → less projects/terminal-cv.md
-  • The whoami binary lives at /usr/bin/whoami (try: cat /usr/bin/whoami)`;
+  • Try: whoami → ls projects/ → less projects/terminal-cv.md;
 
 const COMMANDS = ["help", "ls", "cat", "less", "cd", "pwd", "whoami", "clear"];
 
