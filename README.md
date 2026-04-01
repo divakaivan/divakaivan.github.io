@@ -55,46 +55,85 @@ Brief bio, links, etc.
 export default whoami;
 ```
 
-### Update the 2025 year overview
+### Add a new root-level plain file (no extension, like `whoami`)
 
-Edit `lib/content/year2025.ts`. It is another plain Markdown string export — update the goals, progress, reading list, etc. in place.
-
-### Add a new project
-
-1. Create a Markdown file in `content/projects/`, e.g. `content/projects/my-new-project.md`.
-2. Import it and add it to the record in `lib/content/projects.ts`:
+1. Create `lib/content/myfile.ts` exporting a Markdown string:
 
 ```ts
-import myNewProject from "../../content/projects/my-new-project.md";
+// lib/content/myfile.ts
+const myfile = `# My File
 
-const projects: Record<string, string> = {
-  "terminal-cv.md": terminalCv,
-  "my-new-project.md": myNewProject, // 👈 add this line
+Some content here.
+`;
+
+export default myfile;
+```
+
+2. Register it in `lib/filesystem.ts`:
+
+```ts
+import myfile from "./content/myfile";
+
+export const filesystem: DirectoryNode = {
+  type: "directory",
+  children: {
+    // ... existing entries ...
+    myfile: { type: "file", content: myfile }, // 👈 add this line
+  },
 };
 ```
 
-The file will automatically appear under `~/projects/` in the terminal.
+The file will appear as `~/myfile` in the terminal (readable with `cat myfile`).
 
-### Add a new post
+### Add a root-level `.md` file (like `example.md`)
 
-1. Create a Markdown file in the appropriate year folder, e.g. `content/posts/2024/my-new-post.md`.
-2. Import it and add it to the record in `lib/content/posts2024.ts`:
+1. Create `lib/content/example.ts` exporting a Markdown string:
 
 ```ts
-import myNewPost from "../../content/posts/2024/my-new-post.md";
+// lib/content/example.ts
+const example = `# Example
 
-const posts2024: Record<string, string> = {
-  "building-a-data-pipeline.md": buildingDataPipeline,
-  "my-new-post.md": myNewPost, // 👈 add this line
+Some content here.
+`;
+
+export default example;
+```
+
+2. Register it in `lib/filesystem.ts` with the `.md` extension as the key:
+
+```ts
+import example from "./content/example";
+
+export const filesystem: DirectoryNode = {
+  type: "directory",
+  children: {
+    // ... existing entries ...
+    "example.md": { type: "file", content: example }, // 👈 add this line
+  },
 };
 ```
 
-### Add a brand-new section / directory
+The file will appear as `~/example.md` in the terminal (readable with `cat example.md`).
 
-To add a completely new directory to the terminal filesystem (e.g. `~/notes/`):
+> **Tip:** For longer content, you can keep the text in a real Markdown file instead of a TypeScript string. Create `content/example.md`, then import it in your TypeScript file: `import example from "../../content/example.md";`
 
-1. Create your content files in `content/` and a matching `lib/content/` TypeScript module that exports a `Record<string, string>`.
-2. Register the new directory in `lib/filesystem.ts`:
+### Add a new folder with markdown files inside
+
+1. Create one or more Markdown files in a new folder, e.g. `content/notes/first-note.md`.
+2. Create `lib/content/notes.ts` that imports each file and exports a record:
+
+```ts
+// lib/content/notes.ts
+import firstNote from "../../content/notes/first-note.md";
+
+const notes: Record<string, string> = {
+  "first-note.md": firstNote,
+};
+
+export default notes;
+```
+
+3. Register the new directory in `lib/filesystem.ts`:
 
 ```ts
 import notes from "./content/notes";
@@ -116,14 +155,16 @@ export const filesystem: DirectoryNode = {
 };
 ```
 
+The directory will appear as `~/notes/` in the terminal — navigate with `cd notes` and list files with `ls`.
+
 ### Quick reference
 
-| What you want to change | File to edit |
-|-------------------------|--------------|
+| What you want to change | File(s) to edit |
+|-------------------------|-----------------|
 | Personal intro (`whoami`) | `lib/content/whoami.ts` |
-| 2025 year overview | `lib/content/year2025.ts` |
-| Projects list | `lib/content/projects.ts` + `content/projects/*.md` |
-| 2024 posts | `lib/content/posts2024.ts` + `content/posts/2024/*.md` |
+| Root-level plain file | `lib/content/<name>.ts` + `lib/filesystem.ts` |
+| Root-level `.md` file | `lib/content/<name>.ts` + `lib/filesystem.ts` |
+| Folder with `.md` files | `content/<folder>/*.md` + `lib/content/<folder>.ts` + `lib/filesystem.ts` |
 | Filesystem layout | `lib/filesystem.ts` |
 
 ## Tech Stack
