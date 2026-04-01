@@ -1,54 +1,133 @@
-const year2025 = `# 2025
+const year2025 = `### I added bullet points in descending date order of some things I did in 2025
 
-A year of shipping things, learning in public, and going deeper instead of wider.
+*Updated: 31 Dec 2025*
 
----
+## December
 
-## Themes
+- completed tryhackme's Advent of Cyber 2025
+- read How We Learn by Stanislas Dehaene
 
-**Ship over polish.** I spent too much of 2024 polishing things that never launched. This year, the rule is: if it works well enough to be useful, it ships.
+## November
 
-**Depth over breadth.** No more adding new languages or frameworks to the pile. This year is about going deeper in Python, TypeScript, and distributed systems.
+- Started reading the book Advances in Financial ML by Marcos López de Prado (still on chapter 1's exercises about using the popular sampling techniques - tick bars, volume bars, dollar bars, CUSUM filters)
+- While helping my partner for her Stat ML class, I realised that Ridge and Lasso can be derived from Bayesian modelling with a Normal and Laplace prior, respectively and decided to derive it for fun ([post here](https://www.linkedin.com/feed/update/urn:li:activity:7384968272858791936/))
+- I saw that Stanford Uni updated the Computer Vision course taught by Fei-Fei Li so decided to re-watch [that whole thing](https://www.youtube.com/playlist?list=PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16)
+- Started doing some of the introductory cyber security courses on tryhackme
+- In december, I will try to do Advent of Cyber by tryhackme
 
-**Write to think.** I'm committing to writing one post per month. Not for an audience — just to force clarity in my own thinking.
+## October
 
----
+- Organised a small Discord community (~30 people) to follow along the scikit-learn MOOC. It's a great resource and I wanted to help others learn from it as well as it was amazingly helpful during my preparation for the scikit-learn certification exams
+- Read The Vital Question by Nick Lane - it was recommended by A. Karpathy many times so I decided to give it a go. As someone with super basic chemistry/biology knowledge (from high school), the book was hard to follow at times so from my first read I learned how unlikely it was that smart living creatures began to exist in some hot vent 3.5-4 billion years ago
+- Read The Social Contract by Jean-Jacques Rousseau (more books out of my comfort zone :D )
 
-## Goals
+## September
 
-- [ ] Launch at least 3 side projects publicly
-- [ ] Write 12 blog posts (one per month)
-- [ ] Contribute to 5 open source projects
-- [ ] Read 12 technical books
-- [ ] Complete a course on distributed systems
+- Attended PyData Paris and talked about skore on probabl's stand - learning what users like/want more
+- Presented skore at a local ML Club meetup (which kind of prepared me for PyData Paris)
+- Completed my European Summer of Code journey with probabl :pray:
 
----
+## August
 
-## Progress
+- Now that I am in a country with easy access to English books, I bought some favourites to start building my library
+  - Mathemtics for Machine Learning (physical version of http://mml-book.github.io/)
+  - Linear algebra: essence & form (physical version of https://www2.math.upenn.edu/~ghrist/preprints/LAEF.pdf)
+  - Make it stick: The science of successful learning
+- Of course I re-read them and I felt I knew more compared to ~1 year ago when I read them for the first time
+- Continued working on skore
 
-### Q1 (Jan–Mar)
-- ✅ Built and launched this terminal-cv site
-- ✅ Started reading *Designing Data-Intensive Applications*
-- 🔄 Working on a side project for personal finance tracking
+## July
 
-### Q2 (Apr–Jun)
-- [ ] Launch the finance tracker
-- [ ] Write about distributed systems learnings
+- started my OSS contributor journey with probabl.ai under the European Summer of Code stipend; I also added a new page to me blog fetching my contributions - [ESoC page](https://ivanstudyblog.github.io/esoc)
+- new youtube video Using keras SKLearnClassifier in a skore report - [youtube](https://youtu.be/Hpiuwc-Dxog)
+- decided to learn more about OS -> found [OS in 1000 lines of code](https://operating-system-in-1000-lines.vercel.app/en/)
+- dived into *that XOR trick* and how python's sum() works
 
----
+## June 
 
-## Reading List
+- [teach] Finished my Stanford University Code in Place 2025 Section Leader responsibilities 🥳 
+- [mini-project] Network programming in C during my flight. I was on a ~15hr transfer so I wanted to do something that doesn't require wifi. I found "Beef's introduction to Network programmin" and it blew my mind with how easy it describes networking concepts, with great examples and I was able to create my own scripts:
 
-| Book | Status |
-|------|--------|
-| Designing Data-Intensive Applications | 📖 In progress |
-| The Pragmatic Programmer | ✅ Done |
-| Clean Code | ✅ Done |
-| A Philosophy of Software Design | 📋 Queued |
+I ended up making 3 things (some of the code overlaps):
+1. Read entire data.txt into memory and send over TCP to a client
+2. Stream large data.txt in fix-sized chunks over TCP
+3. Receive TCP data and write to stdout
 
----
+[Github](https://github.com/divakaivan/networking-in-c)
 
-*Last updated: January 2025*
+- [book] Read "Make It Stick: The Science of Successful Learning" - amazing 
+- [mini-project] Created a simple ssh politics.news terminal app to help introduce people interested in politics to the terminal (inspired by ssh terminal.shop) (using Go, wish, bubblegum, other Charm libs); [Github](https://github.com/divakaivan/politics.news) (need to add README and figure out if I can deploy it for free somewhere)
+- [book] Read "Responsible AI: implementing unbiased and ethical algorithms" - amazing; definitely something to re-read, refer to for responsible AI questions, and recommend to beginners
+
+
+## May
+
+* [book] Finished Writing an Interpreter in Go (along with some YT videos) - have a bit better understanding of how interpreters work
+* [tool] Explored ICO's AI and Data protection risk toolkint + Microsoft's responsible AI toolbox
+* [teach] Completed my last official session for Stanford's Code in Place 2025 - will have a voluntary extra session to answer any student questions
+* [teach] Did 9 TeachNow sessions in the Code in Place platform (1-to-1 help sessions around 30mins each)
+* [zig] Read the Zig language docs + did Ziglings on youtube
+* [zig] Writing Karpathy's micrograd in Zig for AI + Zig practice (wip)
+* [course] Concluded Eroc Riddoch's Cloud Eng for Python devs course
+
+## April 
+
+* [course] Started teaching Python in Stanford's Code in Place 2025
+* [course] Started Stanford's AA228V Validation of Safety Critical Systems I System Modeling [link](https://www.youtube.com/watch?v=hE9iWwMZANE&list=PLoROMvodv4rOq1LMLI8U7djzDb8--xpaC)
+* [course] Learned about memory management in C and built a basic garbage collector on [boot.dev](https://www.boot.dev/courses/learn-memory-management-c)
+* [course] Finished teaching the [MLOps 101](https://github.com/divakaivan/mlops-101) course at my university club
+* [oss] Made my first oss contributions to [skore - the scikit-learn sidekick](https://github.com/probabl-ai/skore)
+* [mini-project] [Develop an ML model API following the Open Inference Protocol](https://github.com/divakaivan/model-api-oip)
+* [book] [The Last Algorithms Course You'll Need](https://theprimeagen.github.io/fem-algos)
+* [book] Write an interpreter in Go by [Throsten Ball](https://interpreterbook.com/) + [this youtube series about a language parser in Go](https://www.youtube.com/watch?v=SWjFg5n23-g)
+* [book] The Alignment Problem by Brian Christian
+* [book] [Let's Go](https://lets-go.alexedwards.net/) by Alex Edwards
+* [book] [Build Your Own Database From Scratch in Go](https://build-your-own.org/database/)
+* [cartoon-book] [How HTTPS Works](https://howhttps.works/)
+* [btw] Started using neovim when writing Go and I ❤️ it
+
+## March
+
+* [project] built an API with Go, which is tested, Dockerized, published on Docker Hub, deployed in a local Kubernetes cluster, and monitored with dashboards for Kubernetes and the API's usage - [github](https://github.com/divakaivan/rssagg)
+* [project] setup and learned about Platform Engineering and automation with Backstage - [video](https://www.youtube.com/watch?v=i4cQzjRNz4M) + [linkedin post](https://www.linkedin.com/posts/activity-7308108817068646400-BLJ5)
+* [book] started reading Kafka: The Definitive Guide, 2nd Edition (will finish it in April)
+* [book] learned about language from linguists' point of view by reading Course in general linguistics by Ferdinand de Saussure (1916) and Syntactic Structures by Noam Chomsky (1957) - [linkedin](https://www.linkedin.com/posts/activity-7310163253425250305-PoYN)
+* [book] read Generative AI on Kubernetes by Roland Huss, Daniele Zonca (+ waiting for new chapters)
+* [book] (Feb - Mar) read Alex Xu's System Design Interview (Vol. 1)
+* [book] (Feb - Mar) read [ByteByteGo's ML System Design book](https://bytebytego.com/)
+* [book-ish] read through FastAPI's full documentation (amazing)
+* [book-ish] read through Kubernetes' documentation related to CKAD (very nice examples)
+* [course] covered the study materials for [Certified Kubernetes Applications Developer](https://www.udemy.com/course/certified-kubernetes-application-developer/) (CKAD)
+* [course] (Jan-Mar) watched some of [Stanford's MLSys seminar series](https://www.youtube.com/playlist?list=PLSrTvUm384I9PV10koj_cqit9OfbJXEkq)
+* [course] covered [Stanford's CS149 - Parallel Computing](https://www.youtube.com/playlist?list=PLoROMvodv4rMp7MTFr4hQsDEcX7Bx6Odp)
+* [mini-course] built a [mini-http server from scratch](https://github.com/divakaivan/build-http-scratch) & [learned about nginx](https://github.com/divakaivan/nginx-crash-course)
+* [course] covered Eric Riddoch's [Taking Python to Production: A Professional Onboarding Guide](https://www.udemy.com/course/setting-up-the-linux-terminal-for-software-development/)
+* [bootcamp] (Jan - Mar) completed Maria Vechtomova and Başak Eskili's End-to-end MLOps with Databricks boot camp (got as a Christmas present 😆)
+* [bootcamp] (Jan - Mar) Completed Zach Wilson's Data Engineering boot camp (won my spot by being an active member and helper in Zach's free DE boot camp) - [Combined Certificate of Superbness](https://www.dataexpert.io/certification/divakaivan/combined-superb)
+
+
+## February
+
+* [book] read [ML for Tabular data](https://www.manning.com/books/machine-learning-for-tabular-data) by Mark Ryan and Luca Massaron
+* [course] covered [MIT's Intro to Algorithms Spring 2020](https://www.youtube.com/playlist?list=PLUl4u3cNGP63EdVPNLG3ToM6LaEUuStEY)
+* [project] [Finished an example project for a MLOps 101 mini-course I will teach to my university club](https://github.com/divakaivan/mlops-101)
+* [project] [Finished a full-stack voice-to-voice app that lets users interact with their finances through an AI agent](https://github.com/divakaivan/voice2voice-banking-assistant)
+* [project] [Finished my capstone for Zach Wilson's bootcamp - Using voice data to extract insight from team communication](https://github.com/divakaivan/lolesports-voice-analytics)
+
+
+## January
+
+* [book] read Clean Coder, The: A Code of Conduct for Professional Programmers by Robert C. Martin
+* [book] read [Refactoring Guru's design patterns](https://refactoring.guru/)
+* [book] read Clean Code: A Handbook of Agile Software Craftsmanship by Robert C. Martin
+* [book] reading Chip Huyen's [ML Interviews book](https://huyenchip.com/ml-interviews-book/)
+* [sql-leetcode]finished all SQL questions in Data Lemur (also ML and Stats)
+* [course] re-watched CS50's lectures on [Data Structures, Algorithms, C](https://cs50.harvard.edu/x/2025/)
+* [course] covered a practical [Kubernetes course](https://www.youtube.com/watch?v=d6WC5n9G_sM&pp=ygUZa3ViZXJuZXRlcyBpbnRybyBic3RzY2h1aw%3D%3D) (really good!)
+* [blog] found podcasts episodes with MarvelousMLOps' [Maria](https://youtu.be/Nnq_2uHBUSo) and [Başak](https://youtu.be/2v8Sops3n1A) and read through a lot of [MarvelousMLops' posts](https://marvelousmlops.substack.com/) 
+* [mini-project] did a conceptual, logical (+physical in Neo4j) graph data model for [EU AI Act data](https://www.linkedin.com/posts/activity-7282017446650159104-gYlO?utm_source=share&utm_medium=member_desktop)
+* [book] read [Machine Learning Engineering with Python - Second Edition](https://learning.oreilly.com/library/view/machine-learning-engineering/9781837631964/)
+* [book] read through [Software Engineering for Data Scientists](https://learning.oreilly.com/library/view/software-engineering-for/9781098136192/)
 `;
 
 export default year2025;
