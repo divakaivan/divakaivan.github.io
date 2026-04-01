@@ -1,4 +1,4 @@
-## AI/ML/MLOps
+## AI/ML/MLOps Projects
 
 <div id="projects">
   <div class="project-item">
