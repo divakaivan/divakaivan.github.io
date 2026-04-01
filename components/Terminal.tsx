@@ -238,7 +238,7 @@ export default function Terminal() {
   );
 
   const focusInput = () => {
-    if (!lessMode && !window.getSelection()?.toString()) inputRef.current?.focus();
+    if (!lessMode && !window.getSelection()?.toString()) inputRef.current?.focus({ preventScroll: true });
   };
 
   return (
