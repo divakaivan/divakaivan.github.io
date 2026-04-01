@@ -5,7 +5,6 @@ export type OutputEntry =
   | { type: "markdown"; content: string }
   | { type: "error"; content: string }
   | { type: "ls"; items: { name: string; isDir: boolean }[] }
-  | { type: "bat"; content: string; filename: string };
 
 export type CommandResult = {
   output: OutputEntry[];
@@ -18,7 +17,6 @@ const HELP_TEXT = `Available commands:
   help          Show this help message
   ls [path]     List directory contents
   cat <file>    Display file contents (markdown rendered)
-  bat <file>    Display file with syntax highlighting + line numbers
   less <file>   Page through a file  (q: quit, space/f: forward, b: back)
   cd <dir>      Change directory
   pwd           Print working directory
@@ -30,7 +28,7 @@ Tips:
   • Press Tab to autocomplete file and directory names
   • Try: ls → cat whoami → ls projects/ → less projects/terminal-cv.md`;
 
-const COMMANDS = ["help", "ls", "cat", "bat", "less", "cd", "pwd", "whoami", "clear"];
+const COMMANDS = ["help", "ls", "cat", "less", "cd", "pwd", "whoami", "clear"];
 
 export function executeCommand(
   command: string,
@@ -114,39 +112,6 @@ export function executeCommand(
       }
 
       return { output: [{ type: "markdown", content: node.content }] };
-    }
-
-    case "bat": {
-      if (!args[0]) {
-        return {
-          output: [{ type: "error", content: "bat: missing file operand" }],
-        };
-      }
-
-      const target = resolvePath(currentPath, args[0]);
-      const node = getNode(target);
-
-      if (!node) {
-        return {
-          output: [
-            {
-              type: "error",
-              content: `bat: ${args[0]}: No such file or directory`,
-            },
-          ],
-        };
-      }
-
-      if (node.type === "directory") {
-        return {
-          output: [
-            { type: "error", content: `bat: ${args[0]}: Is a directory` },
-          ],
-        };
-      }
-
-      const filename = args[0].split("/").pop() ?? args[0];
-      return { output: [{ type: "bat", content: node.content, filename }] };
     }
 
     case "less": {
