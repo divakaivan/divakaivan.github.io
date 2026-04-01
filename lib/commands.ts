@@ -26,7 +26,8 @@ const HELP_TEXT = `Available commands:
 Tips:
   • Use ↑ / ↓ arrow keys to navigate command history
   • Press Tab to autocomplete file and directory names
-  • Try: ls → cat whoami → ls projects/ → less projects/terminal-cv.md`;
+  • Try: whoami → ls projects/ → less projects/terminal-cv.md
+  • The whoami binary lives at /usr/bin/whoami (try: cat /usr/bin/whoami)`;
 
 const COMMANDS = ["help", "ls", "cat", "less", "cd", "pwd", "whoami", "clear"];
 
@@ -46,7 +47,7 @@ export function executeCommand(
       return { output: [{ type: "text", content: currentPath || "/" }] };
 
     case "whoami": {
-      const node = getNode("/whoami");
+      const node = getNode("/usr/bin/whoami");
       if (node && node.type === "file") {
         return { output: [{ type: "markdown", content: node.content }] };
       }
