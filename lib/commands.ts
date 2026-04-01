@@ -26,7 +26,7 @@ const HELP_TEXT = `Available commands:
 Tips:
   • Use ↑ / ↓ arrow keys to navigate command history
   • Press Tab to autocomplete file and directory names
-  • Try: whoami → ls projects/ → less projects/terminal-cv.md;
+  • Try: whoami → ls projects/ → less projects/terminal-cv.md`;
 
 const COMMANDS = ["help", "ls", "cat", "less", "cd", "pwd", "whoami", "clear"];
 
