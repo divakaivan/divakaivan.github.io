@@ -5,7 +5,7 @@ A terminal-like UI for my personal website. Users explore content using familiar
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router, static export)
+- **Framework:** Next.js 15 (App Router, static export)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Deployment:** GitHub Pages

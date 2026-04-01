@@ -52,7 +52,7 @@ To add a new file to the filesystem, add an entry to the appropriate `Record<str
 
 ## Tech Stack
 
-- [Next.js 14](https://nextjs.org/) (App Router, static export)
+- [Next.js 15](https://nextjs.org/) (App Router, static export)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [react-markdown](https://github.com/remarkjs/react-markdown)
