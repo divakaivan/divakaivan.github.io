@@ -168,6 +168,8 @@ npm run dev      # http://localhost:3000
 
 The site is automatically built and deployed to GitHub Pages on every push to `main` via the workflow at `.github/workflows/deploy.yml`.
 
+**Important (if css is not rendering) - go to `.github/workflows/deploy.yml` and remove/update the env var `NEXT_PUBLIC_BASE_PATH` - if you are using this website on your github account repo ({your_name}.github.io then you should remove the env var. Otherwise keep it.**
+
 To enable GitHub Pages in your repo:
 1. Go to **Settings → Pages**
 2. Set Source to **GitHub Actions**
