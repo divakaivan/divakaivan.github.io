@@ -1,5 +1,5 @@
 # terminal-cv
-
+ 
 A terminal-like personal website built with Next.js. Visitors explore your content using familiar Unix commands (`ls`, `cat`, `cd`).
 
 ![example-terminal-cv](https://github.com/user-attachments/assets/4be87f27-913a-473f-9b01-b56417932a1c)
@@ -173,3 +173,4 @@ The site is automatically built and deployed to GitHub Pages on every push to `m
 To enable GitHub Pages in your repo:
 1. Go to **Settings → Pages**
 2. Set Source to **GitHub Actions**
+
