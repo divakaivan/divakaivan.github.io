@@ -2,8 +2,6 @@
 
 A terminal-like personal website built with Next.js. Visitors explore your content using familiar Unix commands (`ls`, `cat`, `cd`).
 
-**Live site:** https://divakaivan.github.io/terminal-cv
-
 ## Features
 
 - 🖥️ Full terminal UI with a blinking cursor and command prompt
@@ -23,18 +21,6 @@ pwd           Print working directory
 whoami        Display personal information
 help          Show available commands
 clear         Clear the terminal
-```
-
-## Filesystem Structure
-
-```
-~/
-├── whoami          Personal introduction
-├── 2024/           Posts and notes from 2024
-│   └── *.md
-├── 2025.md         Year overview for 2025
-└── projects/       Project write-ups
-    └── *.md
 ```
 
 ## Customising Your Content
@@ -166,14 +152,6 @@ The directory will appear as `~/notes/` in the terminal — navigate with `cd no
 | Root-level `.md` file | `lib/content/<name>.ts` + `lib/filesystem.ts` |
 | Folder with `.md` files | `content/<folder>/*.md` + `lib/content/<folder>.ts` + `lib/filesystem.ts` |
 | Filesystem layout | `lib/filesystem.ts` |
-
-## Tech Stack
-
-- [Next.js 15](https://nextjs.org/) (App Router, static export)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [react-markdown](https://github.com/remarkjs/react-markdown)
-- Deployed to [GitHub Pages](https://pages.github.com/)
 
 ## Local Development
 
