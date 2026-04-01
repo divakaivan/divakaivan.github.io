@@ -10,6 +10,7 @@ const year2026 = `## Self-studying 2026
 - started preparing for Certified Backstage Associate but doubt will take it soon - think I need a break from KodeKloud style learning
 - started following [Build Your Own Kubernetes Operators with Go and Kubebuilder](https://youtu.be/odP153inZUo)
 - read [Generative AI on Kubernetes](https://www.redhat.com/rhdc/managed-files/cl-oreilly-generative-ai-kubernetes-analyst-material-3188555kr-202603-en_0.pdf) - an amazing book
+- vibed this new cool terminal-like personal website to use going forward - https://divakaivan.github.io/ (repo: https://github.com/divakaivan/divakaivan.github.io)
 
 ### February
 
