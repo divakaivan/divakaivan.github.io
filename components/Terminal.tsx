@@ -244,12 +244,12 @@ export default function Terminal() {
   return (
     <div
       ref={containerRef}
-      className="h-screen overflow-y-auto bg-[#0d1117] text-green-400 font-mono text-sm cursor-text"
+      className="h-screen overflow-y-auto bg-[#0d1117] text-green-400 font-mono text-base cursor-text"
       onClick={focusInput}
     >
       <div className="max-w-4xl mx-auto p-4 pb-2">
         {/* ASCII art + welcome */}
-        <pre className="text-green-500 mb-4 text-xs leading-tight whitespace-pre overflow-x-auto">
+        <pre className="text-green-500 mb-4 text-sm leading-tight whitespace-pre overflow-x-auto">
           {WELCOME}
         </pre>
 
@@ -298,7 +298,7 @@ export default function Terminal() {
       {lessMode && (
         <div className="fixed inset-0 bg-[#0d1117] flex flex-col z-50">
           {/* Header bar */}
-          <div className="flex items-center gap-4 px-4 py-1 bg-[#161b22] border-b border-gray-700 text-xs text-gray-400 shrink-0">
+          <div className="flex items-center gap-4 px-4 py-1 bg-[#161b22] border-b border-gray-700 text-sm text-gray-400 shrink-0">
             <span className="text-yellow-400 font-semibold">{lessMode.filename}</span>
             <span className="ml-auto">q: quit  space/f: forward  b: back  ↑↓: scroll</span>
           </div>
@@ -316,7 +316,7 @@ export default function Terminal() {
           </div>
 
           {/* Status bar */}
-          <div className="shrink-0 px-4 py-1 bg-[#161b22] border-t border-gray-700 text-xs text-gray-500">
+          <div className="shrink-0 px-4 py-1 bg-[#161b22] border-t border-gray-700 text-sm text-gray-500">
             <span className="text-green-400">:</span>
             <span className="ml-2">Press <kbd className="bg-gray-700 text-gray-200 px-1 rounded">q</kbd> to quit</span>
           </div>
@@ -330,7 +330,7 @@ function OutputLine({ output }: { output: OutputEntry }) {
   switch (output.type) {
     case "text":
       return (
-        <pre className="text-green-300 pl-0 mt-1 mb-1 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+        <pre className="text-green-300 pl-0 mt-1 mb-1 whitespace-pre-wrap font-mono text-base leading-relaxed">
           {output.content}
         </pre>
       );
