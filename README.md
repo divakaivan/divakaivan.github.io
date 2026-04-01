@@ -2,12 +2,15 @@
 
 A terminal-like personal website built with Next.js. Visitors explore your content using familiar Unix commands (`ls`, `cat`, `cd`).
 
+![example-terminal-cv](https://github.com/user-attachments/assets/4be87f27-913a-473f-9b01-b56417932a1c)
+
 ## Features
 
 - 🖥️ Full terminal UI with a blinking cursor and command prompt
 - 📁 Simulated filesystem — navigate directories and read files
 - 📝 Markdown rendering — headings, lists, code blocks, tables, and images
 - ⌨️ Command history with ↑/↓ arrow key navigation
+- Renders images
 - ↹ Tab completion for file and directory names
 - `Ctrl+L` / `clear` to clear the terminal
 
