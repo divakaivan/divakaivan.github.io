@@ -147,6 +147,7 @@ The directory will appear as `~/notes/` in the terminal — navigate with `cd no
 
 | What you want to change | File(s) to edit |
 |-------------------------|-----------------|
+| Terminal welcome msg + ASCII art | `components/Terminal.tsx` -> `WELCOME` const |
 | Personal intro (`whoami`) | `lib/content/whoami.ts` |
 | Root-level plain file | `lib/content/<name>.ts` + `lib/filesystem.ts` |
 | Root-level `.md` file | `lib/content/<name>.ts` + `lib/filesystem.ts` |
