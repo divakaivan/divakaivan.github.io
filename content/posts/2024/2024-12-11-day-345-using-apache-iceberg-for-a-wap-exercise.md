@@ -1,0 +1,21 @@
+# Hello :) Today is Day 345!
+A quick summary of today:
+* new video by Zach Wilson
+* new video by me ?!?!?
+
+## [The Write-Audit-Publish pattern](https://www.youtube.com/watch?v=ja7VOqDVkuo)
+
+![WAP P1](https://github.com/user-attachments/assets/480e6de7-a9d5-46f9-8c96-a94c4ed6909f)
+![WAP P2](https://github.com/user-attachments/assets/ce27521f-05d3-4afa-91e6-78585cc98244)
+
+Zach mentioned there won't be a lab for this lecture and given how much Apache Iceberg content I have been **consuming** the last week I decided to give it a go and create some kind of exercise. Especially, since I had read a random blog post about branching in iceberg. Ultimately, I learned a lot about the practical side of WAP. Even if my implementation and example were **super** simple 😆
+
+**[Here is my video](https://www.youtube.com/watch?v=CzkBkwv1Llc)**
+
+Every time I decide to record a video for something I do not remember how draining it is since I am so slow when it comes to editing 😆 and I can't edit well either 😆 so in terms of practicing writing code and also explaining things in a beginner-friendly way 💯💯💯 it is worth it. But after the recording is done, it is soo draining for me 😆
+
+---
+
+That is all for today!
+
+See you tomorrow :)

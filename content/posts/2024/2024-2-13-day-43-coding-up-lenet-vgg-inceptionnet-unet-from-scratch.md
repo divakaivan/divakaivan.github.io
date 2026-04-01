@@ -1,0 +1,89 @@
+## Hello :) Today is Day 43!
+A quick summary of today:
+* write LeNet from scratch
+* write VGG from scratch
+* write InceptioNet from scratch
+* write UNet from scratch (again)
+
+Wanting to understand the popular models a bit more, I decided to do the above. 
+
+1) Let's begin with LeNet. 
+
+A basic framework developed in the 1990s, basic but set the groundwork for networks like AlexNet, VGG and ResNet.
+
+![image](https://github.com/user-attachments/assets/b0e2ac81-a149-4fbb-bbcd-9169c2bc49bd)
+![image](https://github.com/user-attachments/assets/3cc6d578-aa70-4513-8794-9e96618e0ef5)
+
+consists of 2 conv layers, each followed by a maxpool, and then ending with 2 fully connected (linear) layer. 
+
+2) Next is VGG
+
+![image](https://github.com/user-attachments/assets/fe475b09-8f45-4334-967f-f487220279b6)
+
+The paper proposes numerous versions, VGG11, VGG13, VGG16, VGG19 but from a google search VGG16 seems most popular (version D in the pic). It is deeper than the earlier LeNet, consisting of multiple conv+maxpool layers, each increasing the amount of filters, and decreasing the size of the image. 
+
+![image](https://github.com/user-attachments/assets/4f7a6039-f755-40aa-9b3f-e494cee18456)
+
+instead of 1 version, a general model was created so that it can adapt to the desired VGG architecture
+
+below is the implementation. I think this is a nice set-up for testing the 4 versions on 1 dataset of my choosing. 
+
+![image](https://github.com/user-attachments/assets/bfa1a582-4180-45eb-aa91-c1eb0a99b678)
+![image](https://github.com/user-attachments/assets/e20d6ee4-b678-4631-9c68-0d3f77d4d34c)
+
+3) GoogLeNet / InceptionNet
+
+This is a long one... haha. Funny that a research paper references a meme (and it got the name inception from it)
+
+![image](https://github.com/user-attachments/assets/a5c2884b-5449-4a9d-b61d-01a4abcc7eb7)
+
+GoogleNet features inception modules - which consist of parallel conv branches of different receptive field sizes.Also 1x1 convolutions reduce dimensionality and improve efficiency.Towards the end, global avgpool replaces fully connected layers for fixed-length feature vectors.
+
+![image](https://github.com/user-attachments/assets/14f358c7-a65a-4b9e-8986-ab6a83b60ff8)
+
+and the implementation:
+
+individual convolution block
+
+![image](https://github.com/user-attachments/assets/8d4f7d79-5020-41b2-9c93-3034f073db39)
+
+individual inception block
+
+![image](https://github.com/user-attachments/assets/8736a06e-fc05-4fdc-86d4-1e01e7ad0dc6)
+
+And the final GoogLeNet
+
+![image](https://github.com/user-attachments/assets/62fb3ed7-df77-42ea-9238-e28f0d871e50)
+![image](https://github.com/user-attachments/assets/24254935-cee1-48fd-91b7-3eea3fb10795)
+
+4) UNet
+
+Yesterday I attemped it and I think I got a good kind-of working model, but I was not sure if it is correct or not because I translated it from tensorflow to pytorch. Today I found another version of UNet online and pasted it into my records (thank you to [this youtuber](https://www.youtube.com/watch?v=IHq1t7NxS8k&t=122s&pp=ygURVW5ldCBmcm9tIHNjcmF0Y2g%3D))
+
+![image](https://github.com/user-attachments/assets/92852315-97ff-48a6-89d3-cb69aa7bdb7a)
+
+Pretty similar to yesterday. Here is the double conv part, and the init of the Unet itself.
+
+![image](https://blogger.googleusercontent.com/img/a/AVvXsEiL3ekAbZ5rXaKiZxRYSsuWZcg5osBGIq70tGB97Sh2aS1oK0UulmtB4K-o3Q9NiRhTHZ5XcalTdQE0NwBvc_RX_5jIG7lCl9JaROXSDCMArOIQZTyo9tZw2dkNE8e0pI-DhJWTHMX8jWJEf1I_h73S9erjOI9oE1SXwXTKWh6QZc9pJeX9W76lygJOxoYk)
+
+and then the forward
+
+![image](https://blogger.googleusercontent.com/img/a/AVvXsEjm7tK-ANSyOlAo5UrCJLnjSTlVMp32zWtZipIwpZPSAvKfn0J1JuBsEU60ckcrvRn9nfx8CT96R5I_ff9QAToiyG1Rbkn4hwjvz_nuu6Q0pRECALOuMf2j7FO5z3fCfE-KbxYlHqHMoTGih0JVBN3_3hlP3-shJLoFvrxD5RBulWzhzHwS2KNwIScdmXiZ)
+
+Actually I decided to even test this UNet on a human image dataset in kaggle
+
+![image](https://blogger.googleusercontent.com/img/a/AVvXsEiEZeLTYDrH0xysuzuwifs9QUS285q_esZ2DxxEVlzqcEozmIhFNh7UD-YF7woPyfcx3aWG_72BKtowcNWHGnTRXMURK2M1jqTPaZvm6Sy-kvDa1H8mArgKmWrACKAxlPIW9q5lyJ_2tK534SH1rvUEqUAOzbnrJmit9Uh7lKUIZBlSMxNSX3TlBNkOZSyv)
+
+After 50 epochs, with learning_rate 0.01 and batch_size of 16, using DiceLoss and BCEWithLogitsLoss, the best model I got is: epoch: 42, train loss: 0.2380, valid loss: 0.3435. I am running a 100 epoch one with a learning rate scheduler. It will take long but the results (hopefully good) can be seen [here](https://www.kaggle.com/code/divakaivan12/human-image-segmentation-with-unet/notebook?scriptVersionId=162731893) in Kaggle. 
+
+Sample outputs from the 50 epoch model are:
+
+![image](https://blogger.googleusercontent.com/img/a/AVvXsEjxemkzGfjJ5UP5-oLJVtNOhP5jAprhNEzX3pdyHy5n4Y27DXnLbShbxWapJH5CvAbAC4eFpQ2MU8kzAlxFKHglm9rfXsg4cOo-VaYcpLL3Rnd3I49LRXT2vmZ01g-JBfuYayq2Wg4NQMqWuNHngXzQk9j8LlnFPp4jW5zga9mnW-VgQp0VQ9JM0pBsMe4B)
+
+I should try IoU, or maybe another combination of losses too. 
+
+Side note! Turns out I did not properly install pytorch on my laptop and was running things on cpu, which is a disaster, but today I set it up properly. (but still using kaggle is a bit faster haha).
+
+That is all for today!
+
+See you tomorrow :) 

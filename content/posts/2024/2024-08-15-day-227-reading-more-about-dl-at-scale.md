@@ -1,0 +1,351 @@
+# Hello :) Today is Day 227!
+A quick summary of today:
+* reading a bit more of the Deep Learning at Scale book on O'Reilly
+* started a new book by a Microsoft data scientist and ex-MIT researcher
+* found some new courses to try out
+
+
+## Deep Learning at Scale Chapter 2. Deep Learning
+
+![image](https://github.com/user-attachments/assets/d15a7ca7-efc5-43a0-9255-610ef98c09be)
+
+### Data Flow in Deep Learning
+
+![image](https://github.com/user-attachments/assets/9c0880eb-7456-46e1-9d37-3989811805bf)
+
+1. **Incoming Data & Data at Rest**:
+   - **Foundation**: Data collection, governance, labeling, and management.
+   - **Human-Centric**: Heavily involves humans in data generation and labeling.
+   - **Efficiency**: A fluid process here enhances the scalability of the model development.
+
+2. **Data Preprocessing**:
+   - **ETL Process**: Involves extracting, transforming, and loading data for model use.
+   - **Pipeline**: Feeds input data into the model.
+
+3. **The Model**:
+   - **Mathematical Operations**: Series of chained operations forming the model.
+   - **Compression Algorithm**: Extracts latent knowledge during learning.
+
+4. **Forward Pass**:
+   - **Prediction**: Applying the chain of operations to produce the model's output.
+   - **Initialization**: Parameters are initialized randomly or via transfer learning.
+
+5. **Error Calculation**:
+   - **Feedback**: Measures how wrong the model’s predictions are.
+   - **Loss Function**: Guides learning by defining error through a specific mathematical function.
+
+6. **Backward Pass**:
+   - **Parameter Adjustment**: Modifies model parameters based on error feedback.
+   - **Gradient Descent**: Uses derivatives to adjust parameters, minimizing error iteratively.
+
+7. **Output**:
+   - **Final Model**: Represents "compressed" knowledge, ready for inference.
+   - **Inference**: Applying the trained model to new data to make predictions.
+
+8. **Feedback**:
+   - **Continual Learning**: Updates the model post-inference to maintain relevance.
+   - **Monitoring**: Includes model monitoring, drift analysis, and user feedback to improve the model.
+
+Besides this, the other bit was using the [book code](https://github.com/suneeta-mall/deep_learning_at_scale/tree/main) and creating a simple tensorflow and then pytorch lightning model and using it for inference on MNIST. 
+
+## Deep Learning at Scale Chapter 3. The Computational Side of Deep Learning
+
+This chapter talked about how computations are performed on the hardware and how acceleration is achieved through hardware advancements. It concentrated more on the hardware side, and below is a quick overview:
+
+### Computer Architecture
+- **The Birth of the Electromechanical Engine**: Discusses the origins of computing machines, focusing on the development of the first electromechanical engines.
+- **Memory and Persistence**: Explores the concepts of memory in computing, particularly how data is stored and retained over time.
+- **Computation and Memory Combined**: Looks at the integration of computation and memory within computing systems, highlighting their interdependence.
+
+### The Scaling Laws of Electronics
+- Covers the principles that govern the scaling of electronic components, likely referring to Moore's Law and related concepts.
+
+### Scaling Out Computation with Parallelization
+- **Threads Versus Processes: The Unit of Parallelization**: Compares and contrasts threads and processes, examining their roles in parallel computing.
+- **Hardware-Optimized Libraries for Acceleration**: Discusses specialized libraries designed to enhance computational performance through hardware optimization.
+- **Parallel Computer Architectures: Flynn’s and Duncan’s Taxonomies**: Explores the classification of parallel computer architectures using Flynn's and Duncan's taxonomies.
+
+### Accelerated Computing
+- **Popular Accelerated Devices for Deep Learning**: Reviews commonly used hardware accelerators that boost the performance of deep learning tasks.
+- **CUDA**: Focuses on CUDA, a parallel computing platform and programming model developed by NVIDIA, which is widely used for high-performance computing and deep learning.
+
+## Deep Learning at Scale Chapter 4. Putting It All Together: Efficient Deep Learning
+
+### GPT-2
+
+#### Key contributors to scale
+
+* Transformer attention block
+* Unsupervised training
+* Zero-shot learning
+* Parameter scale
+
+provided GPT2 model code:
+
+```python
+datamodule = WikiDataModule(name=model_name, batch_size=batch_size, 
+                            num_workers=num_workers)
+model = GPT2Module(name=model_name)
+
+trainer = PLTrainer(
+    accelerator="auto",
+    devices=="auto",
+    max_epochs=max_epochs,
+    callbacks=[
+        TQDMProgressBar(refresh_rate=refresh_rate),
+        ckpt_cb,
+        DeviceStatsMonitor(cpu_stats=True),
+        EarlyStopping(monitor="val/loss", mode="min"),
+    ],
+    logger=[
+        exp_logger,
+        TensorBoardLogger(save_dir=result_dir / "logs"),
+    ],
+    profiler=torch_profiler,
+)
+trainer.fit(model, datamodule)
+```
+
+Everything is provided so to run anything, the book gives a simple command like:
+
+```
+deep-learning-at-scale chapter_4 train_gpt2
+```
+
+The book introduces Aim for experiment tracking. It is an alternative to MLflow and I will keep it in mind to check later and try it myself. 
+
+```python
+exp_logger = AimLogger(
+    experiment=exp_name,
+    train_metric_prefix="train/",
+    val_metric_prefix="val/",
+    test_metric_prefix="test/",
+)
+```
+
+### Modeling Techniques to Scale Training on a Single Device
+
+#### Graph Compilation
+
+- torch.compile: Converts `torch.nn.Module` to `OptimizedModule`, optimizing graph modules for performance gains (30% to 200%).
+- fullgraph: Generates a static graph without eager mode fallback, more efficient when control flow is absent.
+- Compilation Modes:
+  - default: Balanced approach for large models.
+  - reduce-overhead: Minimizes framework overhead, suitable for smaller models.
+  - max-autotune: Maximizes tuning for the fastest performance but has the longest compilation time.
+- Example Usage:
+
+```python
+torch.compile(self.model, mode="max-autotune")
+```
+
+- Debugging: Use TORCH_LOGS="graph_breaks,recompiles" for debugging compilation issues.
+- Batch Size Optimization: For an A100 SXM 80 GB GPU, a batch size of 24 is optimal for training with single precision (fp32).
+
+#### Reduced- and Mixed-Precision Training
+
+- Memory Consumption: Divided into model parameters, input data, activations, gradients, optimizer states, and metrics/losses.
+- Mixed Precision:
+  - Combines single- and half-precision formats for efficient computation.
+  - Implemented using torch.cuda.amp for CUDA-compatible devices.
+  - Memory Penalty: Requires 1.5x memory compared to single precision.
+- Usage:
+
+```python
+Trainer(precision="16-mixed")
+```
+
+- Gradient Scaling and Clipping: 
+  - Gradient Scaling: Manages precision loss with torch.cuda.amp.GradScaler.
+  - Gradient Clipping: Mitigates exploding gradients by capping gradient values.
+
+- 8-bit Optimizers and Quantization:
+  - Techniques like dynamic tree quantization and block quantization help reduce memory while maintaining accuracy.
+  - Implementations available in bitsandbytes library, e.g., bnb.optim.Adam8bit.
+
+#### Memory Tricks for Efficiency
+
+- Memory Layout:
+  - Channels-first (NCHW) vs. Channels-last (NHWC) formats.
+  - Switching to channels-last can provide up to 1.8x performance gain on CPUs.
+- Example
+
+```python
+images = images.to(memory_format=torch.channels_last)
+self.model = self.model.to(memory_format=torch.channels_last)
+```
+
+- Feature Compression: Reduces memory footprint but may introduce performance overhead.
+- Meta and Fake Tensors: Represent tensor shapes and types without actual memory allocation.
+
+#### Optimizer Efficiencies
+
+- Stochastic Gradient Descent (SGD): Propagates gradients in batches, making it effective for large datasets.
+- Gradient Accumulation: Simulates larger batches by accumulating gradients over several steps.
+- Gradient Checkpointing: Balances memory efficiency with computational overhead by saving gradients at checkpoints.
+- Patch Gradient Descent (PatchGD): Scales training of large images by accumulating gradients across image patches.
+
+#### Learning Rate and Weight Decay
+
+- Learning Rate: Crucial for convergence time; needs careful tuning to avoid suboptimal models.
+- Weight Decay: Helps regularize models and mitigate overfitting.
+
+#### Model Input Pipeline Tricks
+
+- Efficient DataLoaders and scalable transformations are crucial as dataset size increases, ensuring that GPUs remain fully utilized.
+
+## Starting [Machine Learning Algorithms in Depth](https://www.manning.com/books/machine-learning-algorithms-in-depth)
+
+<img width="621" alt="image" src="https://github.com/user-attachments/assets/53739b16-761e-4f12-8447-fc2f6e279559">
+
+I saw a Microsoft data scientist - VADIM SMOLYAKOV, published a new book on Manning, after looking at the outline I decided to use one of my free credits on there and purchase it.
+
+### Chapter 1: Machine learning algorithms
+
+- **Algorithm Definition**:
+  - An algorithm is a sequence of steps to achieve a task, taking an input, performing operations, and producing an output.
+  - Example: Sorting a list of integers.
+
+- **Algorithm Performance**:
+  - Two key metrics:
+    - **Runtime Complexity**: Measures the speed of execution.
+    - **Space Complexity**: Measures the amount of memory required.
+
+- **Machine Learning (ML) Algorithms**:
+  - **Supervised Learning**:
+    - Learns a mapping from inputs \(x\) to outputs \(y\) using labeled data.
+    - **Types**:
+      - **Classification**: Predicts discrete labels (e.g., classifying emails as spam or not).
+      - **Regression**: Predicts continuous values (e.g., forecasting stock prices).
+    - **Loss Functions**:
+      - **Classification**: Measures misclassification rate.
+      - **Regression**: Uses Mean Squared Error (MSE) to measure deviation from the true value.
+
+  - **Unsupervised Learning**:
+    - Identifies patterns in data without labeled outputs.
+    - Example: Clustering data points based on similarity.
+
+  - **Deep Learning**:
+    - Involves multiple layers of computation to learn complex patterns.
+    - Uses backpropagation to optimize parameters.
+    - Applications: Natural Language Processing (NLP), Computer Vision (CV), etc.
+
+- **Bayesian Inference**:
+  - Updates beliefs based on new data.
+  - Involves calculating the posterior distribution using prior knowledge and observed data.
+
+- **Types of Bayesian Inference**:
+  - **Markov Chain Monte Carlo (MCMC)**: Samples from high-dimensional spaces to approximate distributions.
+  - **Variational Inference (VI)**: Approximates the posterior by optimizing a simpler distribution.
+
+- **Importance of Learning Algorithms from Scratch**:
+  - Enables better understanding, selection, and troubleshooting of ML algorithms.
+  - Facilitates extending and improving existing models.
+
+- **Mathematical Background**:
+  - Understanding of probability, calculus, and linear algebra is crucial for ML algorithms.
+
+- **Software Implementation**:
+  - Focus on efficient coding practices, using Python, with attention to data structures and problem-solving paradigms like:
+    - **Complete Search**: Traverses the entire search space.
+    - **Greedy Algorithms**: Makes locally optimal choices.
+    - **Divide and Conquer**: Solves problems by breaking them into sub-problems.
+    - **Dynamic Programming**: Solves overlapping subproblems and stores results.
+
+### Chapter 2: Markov chain Monte Carlo
+
+#### 1. Markov chain Monte Carlo (MCMC) is a methodology of sampling from high-dimensional parameter spaces to approximate the posterior distribution \( p(\theta|x) \).
+
+MCMC methods are used in situations where direct sampling from the posterior distribution \( p(\theta|x) \) is challenging, especially in high-dimensional spaces. MCMC constructs a Markov chain, where each state in the chain represents a sample of the parameters \( \theta \), and the chain is designed so that its stationary distribution is the desired posterior distribution. By running the chain for a sufficient number of steps, the samples generated can be used to approximate \( p(\theta|x) \). These methods are particularly useful in Bayesian statistics, where the posterior distribution is often complex and cannot be directly computed.
+
+#### 2. Monte Carlo (MC) integration has an advantage over numerical integration (which evaluates a function at a fixed grid of points), in that the function is only evaluated in places where there is a nonnegligible probability.
+
+Monte Carlo integration is a method of estimating the value of an integral using random sampling. Unlike traditional numerical integration, which evaluates a function at predetermined grid points, MC integration focuses on sampling points in the domain where the function value contributes most to the integral. This is particularly beneficial in high-dimensional spaces where many regions have negligible contributions to the integral. By concentrating computational effort on areas with significant probability, MC integration can be more efficient and accurate, especially when dealing with complex or high-dimensional integrals.
+
+#### 3. In a binomial tree model of a stock price, we assume that at each time step, the stock could be in either up or down states with unequal payoffs characteristic of a risky asset.
+
+The binomial tree model is a discrete-time model for the price evolution of financial assets, such as stocks. At each time step, the model assumes the stock price can move to one of two possible states: "up" or "down." The movement is determined by probabilities assigned to each state, and the payoffs (or returns) are generally unequal, reflecting the inherent risk of the asset. This model captures the uncertainty in stock price movements and is widely used in option pricing and other financial derivatives, providing a flexible framework to approximate continuous-time models like the Black-Scholes model.
+
+#### 4. Self-avoiding random walks are simply random walks that do not cross themselves. We can use Monte Carlo integration to simulate a self-avoiding random walk.
+
+A self-avoiding random walk (SAW) is a type of random walk where the path taken does not revisit any previously occupied position. This restriction makes the problem more complex and is particularly relevant in modeling physical phenomena like polymer chains. Monte Carlo methods can be used to simulate SAWs by generating many random walk paths and then selecting the ones that do not intersect themselves. This simulation can help estimate properties of the walk, such as its average length or the probability of reaching a certain point without crossing itself.
+
+#### 5. Gibbs sampling is based on the idea of sampling one variable at a time from a multidimensional distribution conditioned on the latest samples from all the other variables.
+
+Gibbs sampling is a specific MCMC method used to sample from a joint distribution when direct sampling is difficult. It works by iteratively sampling each variable in a multidimensional distribution while keeping all other variables fixed at their most recent values. The new value for each variable is drawn from its conditional distribution, given the current values of all other variables. Over many iterations, the samples converge to the joint distribution of interest. Gibbs sampling is especially useful when the full conditional distributions are easier to sample from than the joint distribution.
+
+#### 6. The basic idea of the Metropolis-Hastings (MH) algorithm is to propose a move from the current state \( x \) to a new state \( x' \) based on a proposal distribution \( q(x'|x) \) and then either accept or reject the proposed state according to the MH ratio that ensures detailed balance is satisfied.
+ 
+The Metropolis-Hastings algorithm is a versatile MCMC method for sampling from complex distributions. It starts from a current state \( x \) and proposes a new state \( x' \) using a proposal distribution \( q(x'|x) \). The proposed move is then accepted with a probability that depends on the ratio of the target distribution at the new state to that at the current state, adjusted by the proposal distribution. If the move is accepted, the new state becomes the current state; otherwise, the current state remains unchanged. This acceptance rule ensures that the chain will eventually sample from the desired distribution, satisfying the property of detailed balance.
+
+#### 7. The idea of importance sampling is to draw samples in interesting regions (i.e., where both \( p(x) \) and \( |f(x)| \) are large). Importance sampling works by drawing samples from an easier-to-sample proposal distribution \( q(x) \).
+
+Importance sampling is a technique used to estimate properties of a distribution \( p(x) \) by focusing sampling effort on regions that contribute most to the quantity being estimated. Instead of sampling directly from \( p(x) \), which might be difficult, importance sampling draws samples from a proposal distribution \( q(x) \) that is easier to sample from. The key idea is to weight the samples according to the ratio of the target distribution \( p(x) \) to the proposal distribution \( q(x) \). This weighting corrects for the bias introduced by sampling from \( q(x) \) and allows for more efficient estimation by concentrating on "important" regions of the distribution.
+
+### Chapter 3: Variational inference
+
+#### 1. The main idea of variational inference is to choose an approximate distribution q(x) from a family of tractable distributions and then make this approximation as close as possible to the true posterior distribution p(x).
+
+In Bayesian inference, we often want to compute the posterior distribution \( p(x \mid y) \), which represents the distribution of latent variables \( x \) given observed data \( y \). However, the exact computation of the posterior is often intractable due to the complexity of the model or the high dimensionality of the data. 
+
+**Variational Inference** offers a solution by introducing a simpler, more tractable distribution \( q(x) \) from a chosen family of distributions. Instead of directly working with the complex posterior \( p(x \mid y) \), we approximate it using \( q(x) \). The goal is to make \( q(x) \) as close as possible to \( p(x \mid y) \) by minimizing a divergence measure, typically the Kullback-Leibler (KL) divergence. This approach allows us to perform inference in models where exact inference is computationally prohibitive.
+
+
+
+#### 2. An evidence lower bound is an objective function that we seek to maximize to learn the variational parameters of our model.
+
+The **Evidence Lower Bound (ELBO)** is a key concept in variational inference. It serves as a surrogate objective function that we maximize to find the optimal parameters of the variational distribution \( q(x) \). The ELBO is derived from the marginal likelihood (or evidence) \( p(y) \) of the observed data, which is generally difficult to compute directly.
+
+The ELBO is defined as:
+
+\[
+ELBO = \mathbb{E}_{q(x)}[\log p(y, x)] - \mathbb{E}_{q(x)}[\log q(x)]
+\]
+
+_(need to figure out how to do math notation so github's markdown can read the formulas properly)_
+
+Maximizing the ELBO is equivalent to minimizing the KL divergence between the variational distribution \( q(x) \) and the true posterior \( p(x \mid y) \). By optimizing the ELBO, we adjust the parameters of \( q(x) \) to make it a better approximation of the posterior distribution.
+
+
+
+#### 3. In mean-field approximation, we assume the approximate distribution q(x) is fully factorized.
+
+The **Mean-Field Approximation** is a simplification method used in variational inference to make the problem more tractable. In this approach, we assume that the approximate distribution \( q(x) \) can be factorized into independent distributions over the individual latent variables:
+
+\[
+q(x) = \prod_{i} q_i(x_i)
+\]
+
+This assumption reduces the complexity of the optimization problem because we now optimize each \( q_i(x_i) \) independently, rather than dealing with a joint distribution over all variables. While this assumption can significantly simplify computation, it may lead to suboptimal approximations if the true posterior \( p(x \mid y) \) exhibits strong dependencies among the latent variables.
+
+
+#### 4. Mutual information maximization can be carried out by deriving and maximizing the MI lower bound.
+
+**Mutual Information (MI)** is a measure of the amount of information that one random variable \( X \) contains about another random variable \( Y \). In many machine learning tasks, maximizing MI can be beneficial, for example, in feature selection, clustering, or unsupervised learning.
+
+However, directly computing MI can be challenging, especially in high dimensions. To address this, we can derive a **lower bound** on the MI, similar to the ELBO in variational inference. By maximizing this lower bound, we can effectively maximize the MI without needing to compute it directly.
+
+One common approach to derive such a bound is to use variational methods, where we introduce an auxiliary distribution to approximate parts of the MI. The objective then becomes maximizing this bound with respect to the parameters of the auxiliary distribution, leading to an increase in the true MI.
+
+
+## I was also on the look for things to learn
+
+Today I found some interesting courses that I can do while reading the above two books:
+
+* [The Complete dbt (Data Build Tool) Bootcamp: Zero to Hero](https://www.udemy.com/course/complete-dbt-data-build-tool-bootcamp-zero-to-hero-learn-dbt)
+* [What is Dagster?](https://youtu.be/Xe8wYYC2gWQ)
+* [Algorithmic trading with Apache Flink](https://datamasterylab.com/home/course/algorithmic-trading-with-apache-flink-end-to-end-data-engineering/33)
+
+On Coursera:
+
+* [Large Language Model Operations (LLMOps) Specialization](https://www.coursera.org/specializations/large-language-model-operations)
+* [Building Cloud Computing Solutions at Scale Specialization](https://www.coursera.org/specializations/building-cloud-computing-solutions-at-scale)
+* [MLOps | Machine Learning Operations Specialization](https://www.coursera.org/specializations/mlops-machine-learning-duke)
+* [Applied Python Data Engineering Specialization](https://www.coursera.org/specializations/python-data-engineering)
+
+Some of them cost a little money, but I need to pick which one to go for. The dbt one was highly recommended by many in the data eng subreddit. And the coursera ones are taught by Duke Uni professors. 
+
+
+That is all for today!
+
+See you tomorrow :)

@@ -1,0 +1,728 @@
+# Hello :) Today is Day 245!
+A quick summary of today:
+* read more about Streaming Databases
+* started evidently AI's monitoring and observability course
+
+## Streaming Databases Chapter 4: Materialized Views
+
+### Views, Materialized Views, and Incremental Updates
+
+Materialized views separate the processing logic for generating query results from the main processing pipeline, leading to more modular and manageable code in stream processing systems.
+
+#### Traditional Views vs. Materialized Views
+
+- Traditional Views:
+  - Defined by SQL statements executed upon client selection.
+  - Results aren't stored, leading to higher query latency as data is not preprocessed.
+  - Analogy: A smart chipmunk, Simon, counts nuts in a yard every time he's asked, resulting in delays.
+
+- Materialized Views:
+  - Store precomputed results, reducing latency.
+  - Analogy: Simon counts the nuts and stores the total, while a less-smart chipmunk, Alvin, reads and returns the stored value
+  - Incremental changes are monitored, avoiding full recomputation.
+
+#### Incremental Changes
+
+Incremental updates refer to small, targeted changes to data instead of recomputing everything from scratch. This approach keeps data up-to-date with less computational overhead. Simon continuously tracks changes, similar to streaming settings.
+
+### Change Data Capture
+
+Materialized views and Change Data Capture (CDC) are closely related. Materialized views handle precomputing by monitoring incremental changes and storing the results, while CDC provides these incremental changes by capturing data modifications from the Write-Ahead Log (WAL) in an OLTP database. This allows materialized views to preprocess the incremental changes captured by CDC.
+
+#### Extended Chipmunk Analogy
+
+- Attributes of Nuts:
+  - Color
+  - Location (latitude, longitude)
+- Nuts can change color, move, or be removed by other animals. Simon updates the list of nuts in the box to reflect these changes, ensuring that any client querying the list sees the latest nut status.
+
+- WAL Replication:
+  - The WAL from the primary/OLTP database is replicated to create a database replica.
+  - A CDC connector writes the WAL to a topic in a streaming platform, allowing other systems to subscribe.
+- Consumption and Replication:
+  - Sink connectors consume from the topic and create replicas in other database systems.
+  - Stream processors can replicate the database in their cache.
+
+#### Use Case Focus
+
+This technique supports real-time processing by allowing the replication of the original OLTP database in downstream data stores or stream processing engines without relying on batch processing.
+
+### Push Versus Pull Queries
+
+#### Chipmunk Analogy Extension
+
+- Push Query (Simon): Simon watches for changes in the nut count asynchronously and updates the box with the results. This represents a push query that runs without client intervention.
+- Pull Query (Alvin): Alvin retrieves the results from the box synchronously when queried by a client, representing a pull query.
+
+#### Trade-offs Between Push and Pull Queries
+
+- Push Queries:
+  - Lower latency, ideal for applications needing real-time results.
+  - Limited flexibility; clients can't ask complex questions (e.g., averages, joins).
+
+- Pull Queries:
+  - More flexible, allowing for complex queries and deeper insights.
+  - Higher latency due to the additional processing required.
+
+#### Balancing Push and Pull Queries
+
+- Materialized Views:
+  - Serve as a balance between the heavy lifting of push queries and the flexibility of pull queries.
+  - Adjusting the balance:
+    - Moving towards push queries improves performance but reduces flexibility.
+    - Moving towards pull queries increases flexibility but at the cost of higher latency.
+
+![image](https://github.com/user-attachments/assets/33143fd4-99ce-48cc-8638-7293c64a9d5b)
+![image](https://github.com/user-attachments/assets/d9a95a03-d850-4196-be11-7a024b43402c)
+
+#### Combining Flexibility and Low Latency
+
+- Materialized Views with WAL Emission:
+  - A client submits a push query, which creates a materialized view.
+  - The client subscribes to changes in the materialized view, receiving updates in real-time.
+  - This approach allows for ad hoc queries with low latency, without needing separate push and pull queries.
+
+#### Challenges and Solution
+
+- Current Dilemma: Push and pull queries often run in separate systems and are authored by different teams (streaming engineers vs. analysts).
+- Solution: Streaming databases that combine stream processing and databases, using the same SQL engine for both real-time and stored data.
+
+![image](https://github.com/user-attachments/assets/c28456ff-5b1b-4e89-98cb-4f3c34bcf100)
+
+The above shows the path by which data in an OLTP database travels to an RTOLAP system for serving to a client. Let’s look closer at this architecture:
+
+1. The entities are represented as tables in the OLTP database following domain-driven design.
+2. The application inserts, updates, or deletes records in the table. These changes are recorded in the database WAL.
+3. A CDC connector reads the WAL and writes the changes to a topic in a streaming platform. The streaming platform externalizes the OLTP WAL by publishing the changes into topics/partitions that mimic the WAL construct. These can be read by consumers to build replicas of the tables from the original OLTP database.
+4. The stream processor is one such system that reads the topic and builds internal replicas of tables by using materialized views. As the materialized view gets updated asynchronously, it outputs its changes into another topic.
+5. The RTOLAP data store reads the topic that contains the output of the materialized view and optimizes the data for analytical queries.
+
+### CDC and Upsert
+
+The term upsert is a portmanteau of the words update and insert to describe the logic an application employs when inserting and/or updating a database table. Upsert describes a logic that involves an application checking to see if a record exists in a database table. If the record exists by searching for its primary key, the record then invokes an update statement. Otherwise, if the record does not exist, the application invokes an insert statement to add the record to the table.
+
+Upsert operations can indirectly improve select query performance and accuracy in certain scenarios. While upserts themselves are primarily focused on data modification, they can have positive impacts on select query performance and accuracy by maintaining data integrity and optimizing data storage. Here’s how upserts can contribute to these improvements:
+
+Data integrity and accuracy
+* Upserts help maintain data integrity by preventing duplicate records and ensuring the data is accurate and consistent. When select queries retrieve data from a database with proper upsert operations, they are more likely to return accurate and reliable information.
+
+Simplified pull queries
+* Selecting from a table with proper upsert operations simplifies the queries upon lookup. Having to perform deduplication or filtering for the latest records complicates the SQL and adds latency to its execution.
+
+Upsert operations, by definition, only support inserts and updates, deletes tend to be omitted. Some systems will implement upsert to also include delete logic. Others, like Apache Pinot, will only flag a deleted record so that its previous versions can be recovered. In these cases, it’s important to use the RTOLAP implementation of upsert, which requires the RTOLAP to read directly from the output topic. Some RTOLAPs may not expose the delete feature, and the work would have to be done in the stream processor.
+
+In summary, there are two locations where the upsert logic can be implemented—in the RTOLAP system or the stream processor. The simpler and preferred approach is to have the RTOLAP read from the output topic and apply the upsert logic itself. The output topic also provides a buffer in cases where the stream processor produces data faster than the RTOLAP can consume.
+
+Upsert highlights the pain of having two real-time systems grapple over or dodge ownership of such complex logic. These pains will create further contention between data engineers and analytical end users.
+
+### Joining Streams
+
+#### Stream Types and Constructs
+
+- Append-Only Streams:
+  - Streams where only inserts are allowed (e.g., click events).
+  - Represented as append tables in streaming systems, not backed by a state store.
+  - Not stored in materialized views due to potential storage issues from continuous growth.
+
+- Change Streams:
+  - Streams containing change events (e.g., inserts, updates, deletes).
+  - Represented as change tables in streaming systems, backed by a state store (materialized view).
+
+#### Streaming Platforms: Topic Types
+
+- Append Topics:Contain append-only data.
+- Change Topics: Contain change events or CDC events (sometimes referred to as "table topics" in Kafka).
+
+#### Joining Streams and SQL
+
+- SQL is used to define joins and transformations, making it easier to combine streams and databases.
+- Using the same SQL engine for both data in motion (streams) and data at rest (databases) integrates stream processing and database functionalities, leading to the concept of a streaming database
+
+#### Clickstream Use Case
+
+![image](https://github.com/user-attachments/assets/39bff41d-620b-498b-8f6c-7901dcfee674)
+
+1. A customer updates their information.
+
+  * a: The information is saved in an OLTP database.
+
+  * b: A CDC process runs on the OLTP database, capturing changes to the CUSTOMERS table and writing them into a CDC topic. This topic is a compacted topic that can be considered a replica of the CUSTOMERS table. This will allow for other systems to build their replicas of the CUSTOMERS table.
+
+2. The same customer clicks on a product on an e-commerce application.
+
+3. The click event is written into a topic. We don’t write click events into an OLTP database because click events are only inserts. Capturing them in an OLTP database might eventually cause the database to run out of storage.
+
+4. The stream processor reads from the CDC and click topics.
+
+  * a: These are the messages from the CUSTOMERS change table topic in the stream processor. They are stored in a state store whose size depends on the window size (or, in the case of, for example, Kafka Streams or ksqlDB, fully stored in a KTable).
+
+  * b: These are the messages from the CLICK_EVENTS append table topic in the stream processor.
+
+  * c: A left-join is executed between the CLICK_EVENTS append table messages and the CUSTOMERS change table messages. The result of the join is CLICK_EVENTS enriched with their corresponding CUSTOMER information (if it exists).
+
+5. The stream processor writes its output to the topics below.
+
+  * a: This is a change topic and contains the CDC CUSTOMER changes. This would be a redundant topic since the topic in 1b contains the same data. We keep it here to keep the diagram balanced.
+
+  * b: This is an append topic that contains the original CLICK_EVENT data enriched with the CUSTOMER data.
+
+6. Topics are pulled into the RTOLAP data store for real-time serving.
+
+  * a: This is a replica of the original CUSTOMERS table in the OLTP database and built from the change topic.
+
+  * b: This contains the enriched CLICK_EVENTS data.
+
+7. The user invokes queries against the RTOLAP data store.
+
+  * a: The user can query the CUSTOMERS table directly.
+
+  * b: The user can query the enriched CLICK_EVENTS data without having to join the data themselves, as the join has already been done in the stream processor.
+
+## Chapter 5: Introduction to Streaming Databases****
+
+### Identifying the Streaming Database
+
+![image](https://github.com/user-attachments/assets/69637b39-3299-47ef-a102-2df4b9e67a28)
+
+* The database can be one of the three types of data stores that is talked about so far: OLTP, RTOLAP, and the internal state stores in a stream processor. The differences between them dictate how data is stored and queried.
+* The topic is a construct that mimics the WAL in an OLTP database. Topics publish streams of data to other databases and stream processors.
+* Stream processors are the applications that transform streams of data. They hold an internal state store.
+* The materialized view is a process that precomputes a result and stores it in a database. Materialized views are created in a database or stream processor, both of which need to have a persistence layer.
+
+### SQL Expressivity
+
+SQL expressivity refers to how well SQL can succinctly and effectively represent complex data manipulations and queries with concise syntax. It measures SQL's ability to capture the intent of a query or operation in a way that is easy to understand and maintain.
+
+#### Challenges in Merging SQL Engines
+
+Merging SQL engines between a **stream processor** and an **OLAP/OLTP database** can introduce several challenges due to differences in design, use cases, and performance characteristics:
+
+1. Performance Mismatch: Stream processors handle high-velocity, real-time data, while OLAP databases focus on complex analytical queries on historical data. A combined SQL engine might struggle to balance these conflicting requirements.
+
+2. Latency: Stream processing demands low latency, whereas OLAP databases prioritize query optimization. Achieving both in a single engine is challenging.
+
+3. Resource Allocation: Stream processors need resources for real-time data, potentially causing contention with OLAP queries, which require significant compute and memory resources.
+
+4. Data Modeling Differences: Stream processors work with raw or semistructured data, while OLAP databases need structured, preprocessed data. Merging the engines may cause conflicts in data modeling.
+
+5. Data Consistency: Stream processors operate on data in motion, and OLAP databases work with data at rest. Ensuring consistency across these states can be complex.
+
+6. Complexity: Combining stream processing and OLAP capabilities can lead to increased system complexity, affecting maintainability, debugging, and stability.
+
+7. Data Volume and Retention: Stream processors typically have shorter data retention due to high volume, while OLAP databases store data long-term. Managing retention and integration is challenging.
+
+8. Query Optimizations: OLAP databases offer advanced query optimizations that stream processors may lack, leading to suboptimal performance for analytical queries.
+
+9. Schema Evolution: Stream processors may handle schema evolution more flexibly than OLAP databases, which require well-defined schemas. This discrepancy can create issues when merging engines.
+
+10. Maintenance and Updates: Managing a combined SQL engine that handles both streaming and OLAP workloads is more challenging, as updates must cater to both use cases.
+
+#### Mitigating Pitfalls
+
+To mitigate these challenges, careful architectural planning, thorough performance testing, and a deep understanding of specific use cases are essential.
+
+#### Merging OLTP and Stream Processor SQL Engines
+
+Merging SQL engines between **OLTP** and a stream processor can be easier compared to OLAP due to the following shared characteristics:
+
+- Data Format: OLTP databases use a row-based model, aligning with the row-based format of stream processors, facilitating smoother integration.
+- Real-Time Nature: Both systems handle real-time data, simplifying SQL engine merging.
+- Transaction Handling: Both involve transactional processing, aiding in better integration for data consistency and updates.
+- Event-Driven: Stream processors' event-driven nature aligns with real-time updates in OLTP databases, making integration easier.
+
+### Streaming Debuggability
+
+Data engineers need to verify the logic of their SQL when writing data pipelines. Debugging becomes challenging when materialized views span across multiple distributed systems (stream processor, topic, and OLAP). Although theoretically possible by analyzing input and output topics alone, effective debugging requires examining both topics and external databases simultaneously.
+
+#### Advantages of Streaming Databases for Debugging
+
+Streaming databases simplify debugging compared to classical stream processors by offering advanced materialized views. These views are persisted in a row-based or column-based store, making it easier to verify results in one place. Additionally, indexed data in streaming databases allows for faster, more complex ad hoc queries. In contrast, stream processors like Flink require output to be written to a database before validating results through queries.
+
+#### Key Advantages:
+1. Familiar SQL Interface: Streaming databases often use SQL-like languages, making debugging more straightforward for those familiar with SQL.
+2. Simpler Logic: Higher-level abstractions simplify stream processing tasks, making the logic easier to debug.
+3. Integrated Ecosystem: These databases combine stream processing and storage in one system, providing a holistic view of the data pipeline and aiding in debugging.
+4. Built-in Optimizations: Common stream processing patterns are often optimized, improving performance and reducing the need for complex debugging.
+5. Easier Deployment: Designed for ease of deployment, streaming databases reduce potential deployment-related debugging issues.
+
+#### Limitations of SQL
+
+While SQL offers abstraction, it may not always be the best tool for debugging in performance-critical situations. Lower-level domain-specific languages (DSLs) like Kafka Streams and Flink's DataStream API offer more expressibility. Although SQL-based streaming databases support user-defined functions (UDFs) to extend functionality, they have limitations.
+
+Moreover, inspecting the actual execution plan derived by stream processing systems (e.g., aggregation operators in a `GROUP BY` statement) is still a challenge, as tooling for this purpose is underdeveloped.
+
+### Streaming Database Implementations
+
+| Name        | License                      | State Store Implementation        | Use Cases                             |
+|-------------|------------------------------|----------------------------------|---------------------------------------|
+| ksqlDB       | Confluent Community License   | RocksDB (LSM tree key-value storage) | CQRS, push queries                    |
+| RisingWave   | Apache 2                     | Row-based                         | CQRS, push queries, single row lookups|
+| Materialize  | Business Source License (BSL) | Row-based                         | CQRS, push queries, single row lookups|
+| Timeplus (Proton) | Apache 2                  | Column-based                      | Analytical push and pull queries      |
+
+
+### Streaming Database Architecture
+
+![image](https://github.com/user-attachments/assets/ce481e7c-e6cb-4505-bf0a-6898d2ae5ed9)
+
+### ELT with Streaming Databases
+
+ELT (extract, load, transform) data pipelines do not support real-time use cases because the transformation occurs in the destination database. The database, in this case, places the streaming data at rest, which forces batch semantics for all downstream processing.
+
+However, if the destination database using ELT is a streaming database, then the pipeline can be considered still in real time. This integration between the “loading” and “transformation” parts of ELT is mediated by a topic on a streaming platform from which the streaming database consumes the data.
+
+There is a large ecosystem that supports ELT solutions, for example, dbt. In combination with streaming databases, these tools can support real-time ELT for the first time. And because streaming databases behave, on the surface, like databases and not so much like a stream processor, ELT with streaming databases can actually be implemented by the same teams who have previously worked on ELT in a data warehouse. In this vein, a lot of ELT jobs that now run later in the pipeline (in the data warehouse or lakehouse) can be moved to the real-time streaming layer.
+
+### Summary of Streaming Databases
+
+The term **streaming database** represents a convergence of stream processing and traditional databases. While databases are typically associated with batch processing and data at rest, streaming databases integrate streaming and batching, handling both data in motion and data at rest.
+
+#### Key Concepts
+
+- Convergence: Streaming databases merge the concepts of streaming and batch processing, reintroducing elements like the Write-Ahead Log (WAL) and materialized views into the database environment.
+
+- SQL Engines: Traditional database SQL engines handle data at rest. Streaming databases allow materialized views to run asynchronously, enabling SQL to process both data at rest and in motion.
+
+- Persistence Layer:
+  - ksqlDB: Uses RocksDB with primary key indexes.
+  - Newer Databases: Implement a more database-like persistence layer for efficient querying.
+
+- Query Types:
+  - Push Queries: Handled by the streaming component of the database.
+  - Pull Queries: Executed by the database component. The type of storage (columnar vs. row-based) affects the efficiency of pull queries:
+    - Columnar Storage: Efficient for analytical queries and fast aggregations.
+    - Row-Based Storage: Suited for simple lookups and point queries.
+
+#### Spectrum of Streaming Databases
+
+- Row-Based Databases: Typically handle pull queries driven by applications or events.
+- Column-Based Databases: Often support pull queries invoked by humans or dashboards.
+
+![image](https://github.com/user-attachments/assets/510ff81d-e8d5-4770-86d1-40949f9bb06b)
+
+#### Consistency
+
+A crucial property of streaming databases is consistency. This ensures that data adheres to predefined rules and constraints, maintaining accuracy and reliability throughout transactions. Consistency guarantees that each transaction brings the database from one valid state to another without violating integrity rules.
+
+## Chapter 6: Consistency
+
+If you’re familiar with databases, you take consistency for granted. You know that the results of your queries are going to be consistent with the input data. Now imagine you dare to cross the bridge from the database to the streaming world. Can you bank on similar consistency guarantees here, even with the additional complexity of data arriving late and out of order, as well as the emphasis on low latency and high throughput?
+
+For classical stream processors, the answer is no. They guarantee a weaker form of consistency called eventual consistency. For classical stream processing use cases, often involving aggregations on windowed data, eventual consistency is a perfect fit, and it also enables data pipelines with ultra-low latency, with very high throughput, and at extremely large scale. The problem is, if you come from the database world, eventual consistency can turn out to be a confusing and counterintuitive experience—especially in combination with nonwindowed data.
+
+Some more recent stream processing systems support a stronger form of consistency, where every output is the correct output for a subset of the inputs: internal consistency.1 Of these stream processing systems, RisingWave, Materialize, and Pathway are put on the same job to see whether they allow us to solve the toy example in a way that more closely mirrors the intuitions of a typical database engineer.
+
+### Consistency Versus Latency
+
+#### Key Concepts
+- Processing Time Latency: Time required for a stream processing system to produce any answer to a query.
+- End-to-End Latency: Time required for a stream processing system to produce a consistent answer to a query.
+
+#### Latency Trade-offs
+- Internally consistent stream processing systems generally have higher processing time latency than eventually consistent ones.
+- End-to-end latency is often more important for use cases involving nonwindowed data (e.g., JOINs), where consistency is crucial. In these scenarios, internally consistent systems can achieve consistency in less than a second, unlike eventually consistent systems, which may never reach consistency unless external actions are taken.
+
+#### Proposed Solution
+- Switchable Consistency: Future versions of Flink SQL, ksqlDB, and Proton should allow users to toggle internal consistency:
+  - On: For nonwindowed/unbounded data where ultra-low latency isn’t critical.
+  - Off: For windowed data and classical stream processing use cases requiring ultra-low latency.
+
+This would balance ultra-low latency processing with the need for consistency in different scenarios, easing the transition between database and streaming environments.
+
+### Summary
+- Drawbacks of Eventual Consistency:
+  - Difficulty with nonwindowed data.
+  - Incompatibility with traditional SQL intuitions.
+  
+  These issues hinder the broader adoption of stream processing and streaming technology.
+
+- Benefits of Internally Consistent Systems:
+  - Provide stronger consistency guarantees (e.g., RisingWave, Materialize, Pathway).
+  - Solve complex consistency issues without needing expert intervention, thus democratizing stream processing for users familiar with databases.
+
+While they can’t match eventually consistent systems in processing time latency, internally consistent systems often perform better in end-to-end latency, which is more crucial for many applications.
+
+## [ML monitoring with Evidently](https://learn.evidentlyai.com/)
+
+Some of this material, I learned from the MLOps Zoomcamp, but I will cover/re-watch it for completeness.
+
+### Module 1: Introduction
+
+#### What can go wrong with ML in prod?
+
+![image](https://github.com/user-attachments/assets/4babd1be-79ee-4113-b030-bc70d0b04771)
+![image](https://github.com/user-attachments/assets/40dab51a-1a59-44d5-9a49-51ae7e88a917)
+
+Many things can go wrong once you deploy an ML model to the real world. Here are some examples.
+
+Training-serving skew. Model degrades if training data is very different from production data.
+
+Data quality issues. In most cases, when something is wrong with the model, this is due to data quality and integrity issues. These can be caused by:
+
+* Data processing issues, e.g., broken pipelines or infrastructure updates.
+
+* Data schema changes in the upstream system, third-party APIs, or catalogs.
+
+* Data loss at source when dealing with broken sensors, logging errors, database outages, etc.
+
+**Concept drift.** Gradual concept drift occurs when the target function continuously changes over time, leading to model degradation. If the change is sudden – like the recent pandemic – you’re dealing with sudden concept drift.
+
+**Data drift.** Distribution changes in the input features may signal data drift and potentially cause ML model performance degradation. For example, a significant number of users coming from a new acquisition channel can negatively affect the model trained on user data. Chances are that users from different channels behave differently. To get back on track, the model needs to learn new patterns.
+
+**Underperforming segments.** A model might perform differently on diverse data segments. It is crucial to monitor performance across all segments.
+
+![image](https://github.com/user-attachments/assets/fc8627de-250d-4240-bc25-b163c82ba7e8)
+
+#### What is ML monitoring and observability?
+
+What is ML monitoring?
+
+Machine learning model monitoring is a series of techniques to track and analyze the performance of ML models in production. It helps measure ongoing model quality, detect potential issues, and resolve them on time.
+
+When to monitor?
+
+There are three main scenarios when you need ML model monitoring:
+
+* Models in production. Upon deploying ML models to production, you need to keep tabs on the ongoing performance and business impact.
+
+* Models in shadow deployment. In shadow mode, you track the behavior of a candidate model when predictions are generated but not acted upon (in other words, ML models generate outputs, but these outputs are not used in downstream systems).
+
+* During A/B testing. In this case, you track and compare the results of active candidate models.
+
+_Challenges_
+
+![image](https://github.com/user-attachments/assets/f5a590ad-58e4-4027-9500-fbcb77b4679b)
+
+**ML monitoring:**
+
+* tracks a pre-defined set of metrics,
+
+* helps detect issues (“What happened?”, “Is the system working?”),
+
+* is more reactive (helps to find “known unknowns”).
+
+**ML observability:**
+
+* gives visibility into the system behavior,
+
+* helps understand and analyze root causes (“Why it happened? Where exactly?”),
+
+* is more proactive (helps to find “unknown unknowns”).
+
+![image](https://github.com/user-attachments/assets/bfdf6fe1-6f10-4470-90a6-4671d3fd72ef)
+
+_Who should care about observability and monitoring?_
+
+![image](https://github.com/user-attachments/assets/d9c20844-f173-4577-84b4-0d59bf612b98)
+
+#### ML monitoring metrics
+
+**Software system health**
+
+It doesn’t matter how excellent your model is when the whole ML system is down. To track the overall system health, you can reuse existing monitoring schemes from other production services. Standard software performance metrics include latency, error rate, memory usage, disk usage, etc.
+
+**Data quality and data integrity**
+
+In many cases, model issues stem from issues with the input data. To monitor data quality and integrity, you can keep tabs on metrics like the share of missing values, type mismatch, or range violations for important features. The goal here is to ensure the stability of data pipelines.
+
+**Business KPIs**
+
+![image](https://github.com/user-attachments/assets/438d0589-be96-46d7-8112-d8c80c3b516c)
+
+#### ML monitoring setup
+
+![image](https://github.com/user-attachments/assets/ca0b7441-ea14-4f11-a299-c59a19de8a3f)
+
+![image](https://github.com/user-attachments/assets/3d74a176-ceba-404d-b133-a081f41a34ae)
+
+* Ensure the monitoring setup aligns with the complexity of your use case.
+
+* Consider binding retraining to monitoring, if relevant.
+
+* Use reference datasets to simplify the monitoring process but make sure they are carefully curated.
+
+* Define custom metrics that fit your problem statement and data properties.
+
+#### ML monitoring architecture
+
+![image](https://github.com/user-attachments/assets/a2c06e4e-c16e-40f5-a71b-7c1467662910)
+
+![image](https://github.com/user-attachments/assets/f7d7af61-34fb-4607-beaf-b75fb942c008)
+
+![image](https://github.com/user-attachments/assets/720ff5c9-d7cd-4c6f-b835-4a5ade92e735)
+
+### Module 2: ML monitoring metrics
+
+ML monitoring challenges
+
+![image](https://github.com/user-attachments/assets/de1820f8-f88d-4fb0-80ce-d1c768319a40)
+
+![image](https://github.com/user-attachments/assets/9975bc70-0726-4d9c-b1c0-eb23bcd326e3)
+
+#### Overview of ML quality metrics
+
+![image](https://github.com/user-attachments/assets/0329454f-030e-4e2b-8647-1deef2489e6d)
+
+* Classification quality metrics (accuracy, recall, precision, f1, roc-auc, confusion matrix)
+* Regression quality metrics (mse, mae, mape, etc)
+
+#### Ranking quality metrics
+
+Ranking focuses on the relative order of items rather than their absolute values. Popular examples of ranking problems are search engines and recommender systems.
+
+We need to estimate the order of objects to measure quality in ranking tasks. Some commonly used ranking quality metrics are:
+
+* Cumulative gain helps estimate the cumulative value of recommendations and does not take into account the position of a result in the list.
+* Discounted Cumulative Gain (DCG) gives a penalty when a relevant result is further in the list.
+* Normalized DCG (NDCG) normalizes the evaluation irrespective of the list length.
+* Precision @k is a share of the relevant objects in top-K results.
+* Recall @k is a coverage of all relevant objects in top-K results.
+* Lift @k reflects an improvement over random ranking.
+
+If we work on a recommender system, you might want to consider additional – “beyond accuracy” – metrics that reflect RecSys behavior. Some examples are:
+
+* Serendipity
+* Novelty
+* Diversity
+* Coverage
+* Popularity bias
+
+#### [Practice] Evaluating ML model quality
+
+**Imports**
+
+```python
+import pandas as pd
+import numpy as np
+
+from sklearn import datasets
+from sklearn import ensemble
+
+from evidently import ColumnMapping
+from evidently.report import Report
+from evidently.metric_preset import ClassificationPreset, RegressionPreset
+from evidently.metrics import *
+```
+
+**Sample datasets**
+
+```python
+#Dataset for binary probabilistic classifcation
+bcancer_data = datasets.load_breast_cancer(as_frame=True) #auto
+bcancer = bcancer_data.frame
+
+bcancer_ref = bcancer.sample(n=300, replace=False)
+bcancer_cur = bcancer.sample(n=200, replace=False)
+
+model = ensemble.RandomForestClassifier(random_state=1, n_estimators=10)
+model.fit(bcancer_ref[bcancer_data.feature_names.tolist()], bcancer_ref.target)
+
+bcancer_ref['prediction'] = model.predict_proba(bcancer_ref[bcancer_data.feature_names.tolist()])[:, 1]
+bcancer_cur['prediction'] = model.predict_proba(bcancer_cur[bcancer_data.feature_names.tolist()])[:, 1]
+
+#Dataset for regression
+housing_data = datasets.fetch_california_housing(as_frame=True) #auto 
+housing = housing_data.frame
+
+housing.rename(columns={'MedHouseVal': 'target'}, inplace=True)
+housing['prediction'] = housing_data['target'].values + np.random.normal(0, 3, housing.shape[0])
+
+housing_ref = housing.sample(n=5000, replace=False)
+housing_cur = housing.sample(n=5000, replace=False)
+```
+
+**Classification report**
+
+```python
+classification_performance_report = Report(metrics=[
+    ClassificationPreset(probas_threshold=0.7),
+])
+
+classification_performance_report.run(reference_data=bcancer_ref, current_data=bcancer_cur)
+
+classification_performance_report.show(mode='inline')
+```
+
+<img width="1386" alt="image" src="https://github.com/user-attachments/assets/5b10fb4d-c9e0-43e1-a99e-72ca62582127">
+
+<img width="1385" alt="image" src="https://github.com/user-attachments/assets/04446745-829a-4572-be03-7ed44732b359">
+
+<img width="1362" alt="image" src="https://github.com/user-attachments/assets/99f935cf-c94d-4cfd-9250-730aabaf4de9">
+
+<img width="1350" alt="image" src="https://github.com/user-attachments/assets/1289b3f0-c3fd-40ff-9625-e9392980be78">
+
+We can get the data from the automatically created report as html, dict, or json.
+
+**Regression report**
+
+<img width="1376" alt="image" src="https://github.com/user-attachments/assets/19912456-dd96-44a8-bdfa-8e28776024fc">
+
+<img width="1368" alt="image" src="https://github.com/user-attachments/assets/7bf963e5-c368-498f-8bba-3fe67800e495">
+
+<img width="1336" alt="image" src="https://github.com/user-attachments/assets/92226303-bfbc-463b-b40a-78613fed9d5e">
+
+<img width="1350" alt="image" src="https://github.com/user-attachments/assets/cd60c56c-6cd5-45b7-aa0f-8e838bb05645">
+
+<img width="1388" alt="image" src="https://github.com/user-attachments/assets/5ece3bf2-b621-4d61-871a-f93558d125ac">
+
+#### Data quality in machine learning
+
+What can go wrong with the input data?
+
+Some common data processing issues are:
+
+* Wrong source. E.g., a pipeline points to an older version of the table.
+
+* Lost access. E.g., permissions are not updated.
+
+* Bad SQL. Or not SQL. E.g., a query breaks when a user comes from a different time zone and makes an action “tomorrow."
+
+* Infrastructure update. E.g., change in computation based on a dependent library.
+
+* Broken feature code. E.g., feature computation breaks at a corner case like a 100% discount.
+
+![image](https://github.com/user-attachments/assets/c6b187e0-93ba-4600-a2a7-38e3efe6d6b0)
+
+Data profiling is a good starting point for monitoring data quality metrics. Based on the data type, you can come up with basic descriptive statistics for your dataset. For example, for numerical features, you can calculate:
+
+* Min and Max values
+
+* Quantiles
+
+* Unique values
+
+* Most common values
+
+* Share of missing values, etc.
+
+Then, you can visualize and compare statistics and data distributions of the current data batch and reference data to ensure data stability.
+
+![image](https://github.com/user-attachments/assets/6ede8749-ee98-4f45-afea-9c686cc2345e)
+
+**Manual Thresholds for Data Quality**
+
+If reference data is unavailable, we can establish thresholds manually using domain knowledge. Consider the following characteristics for "general ML data quality":
+
+- No/low share of missing values
+- No duplicate columns/rows
+- No constant (or almost constant) features
+- No highly correlated features
+- No target leaks (i.e., high correlation between feature and target)
+- No range violations (e.g., negative values in age or sales)
+
+Manually setting up these conditions can be tedious, so having reference data is often beneficial.
+
+**Data Quality with Reference Data**
+
+If we have reference data, you can compare it with the current data to autogenerate test conditions. Monitor for the following based on the training data or previous batches:
+
+- Expected data schema and column types
+- Expected data completeness (e.g., 90% non-empty)
+- Expected batch size (e.g., number of rows)
+- Expected patterns for specific columns:
+  - Non-unique (features) or unique (IDs)
+  - Specific data distribution types (e.g., normality)
+  - Expected ranges based on observed values
+- Descriptive statistics: averages, median, quantiles, min-max (using point estimation or statistical tests with confidence intervals)
+
+**Sample data test report**
+
+<img width="1339" alt="image" src="https://github.com/user-attachments/assets/b19447cd-3873-4908-9930-1efa499f7ce3">
+
+We can also set tests only on specific columns, to test for specific statistics
+
+```python
+#column-level tests
+data_quality_column_tests = TestSuite(tests=[
+    TestColumnValueMean(column_name='education-num'),
+    TestColumnValueMedian(column_name='education-num'),
+    TestNumberOfUniqueValues(column_name='education'),
+    TestMostCommonValueShare(column_name='education'),
+    TestValueRange(column_name='education-num'),
+    TestShareOfOutRangeValues(column_name='education-num'),
+    TestNumberOfOutListValues(column_name='education'),
+    TestColumnQuantile(column_name='education-num', quantile=0.25),
+    TestColumnShareOfMissingValues(column_name='education'),
+    TestColumnRegExp(column_name='education',reg_exp='^[0..9]'),
+    TestCategoryShare(column_name='education', category='Some-college', lt=0.5),
+])
+
+data_quality_column_tests.run(reference_data=adult_ref, current_data=adult_cur)
+data_quality_column_tests.show(mode='inline')
+```
+
+<img width="1389" alt="image" src="https://github.com/user-attachments/assets/47f16260-7c4a-4c04-97d8-caa4aff5a0dd">
+
+#### Data and prediction drift in ML
+
+**What is data drift, and why evaluate it?**
+When ground truth is unavailable or delayed, we cannot calculate ML model quality metrics directly. Instead, we can use proxy metrics like feature and prediction drift.
+
+**Prediction drift** shows changes in the distribution of model outputs over time. Without target values, this is the best proxy of the model behavior. Detected changes in the model outputs may be an early signal of changes in the model environment, data quality bugs, pipeline errors, etc.
+
+![image](https://github.com/user-attachments/assets/4e7de754-12bc-49a7-b679-a0a4fc0e1c90)
+
+**Feature drift** demonstrates changes in the distribution of input features over time. When we train the model, we assume that if the input data remains reasonably similar, we can expect similar model quality. Thus, data distribution drift can be an early warning about model quality decay, important changes in the model environment or user behavior, unannounced changes to the modeled process, etc.
+
+![image](https://github.com/user-attachments/assets/eb60baa8-7c8b-48d7-8f1a-4441a404b661)
+
+Some key considerations about data drift to keep in mind:
+
+* Prediction drift is usually more important than feature drift. If you monitor one thing, look at the outputs.
+* Data drift in ML is a heuristic. There is no “objective” drift; it varies based on the specific use case and data.
+* Not all distribution drift leads to model performance decay. Consider the use case, the meaning of specific features, their importance, etc.
+* You don’t always need to monitor data drift. It is useful for business-critical models with delayed feedback. But often you can wait.
+* Data drift helps with debugging. Even if you do not alert on feature drift, it might help troubleshoot the decay.
+* Drift detection might be valuable even if you have the labels. Feature drift might appear before you observe the model quality drop.
+
+**How to detect data drift?**
+
+To detect distribution drift, you need to pick:
+
+* Drift detection method: statistical tests, distance metrics, rules, etc.
+
+* Drift detection threshold: e.g., confidence levels for statistical tests or numeric threshold for distance metrics.
+
+* Reference dataset: what an exemplary distribution is.
+
+* Alert conditions: e.g., based on feature importance and the share of the drifting features.
+
+**Data drift detection methods**
+
+![image](https://github.com/user-attachments/assets/e177b96c-8e38-46c6-9633-b9eff4b13854)
+
+![image](https://github.com/user-attachments/assets/6ccdaae8-c491-489d-8dbe-f88e409b2025)
+
+* And rule-based checks
+
+**Univariate vs. multivariate drift**
+
+The univariate drift detection approach looks at drift in each feature individually. It returns drift/no drift for each feature and can be easily interpretable.
+
+The multivariate drift detection approach looks at the complete dataset (e.g., using PCA and certain methods like domain classifier). It returns drift/no drift for the dataset and may be useful for systems with many features.
+
+You can still use the univariate approach to detect drift in a dataset by:
+
+* Tracking the share (%) of drifting features to get a dataset drift decision.
+
+* Tracking distribution drift only in the top model features.
+
+* Combining both solutions.
+
+**Tips for calculating drift**
+
+Here are some tips to keep in mind when calculating data drift:
+
+* Data quality is a must. Calculate data quality metrics first and then monitor for drift. Otherwise, you might detect “data drift” that is caused by data quality issues.
+
+* Mind the feature set. The approach to drift analysis varies based on the type and importance of features.
+
+* Mind the segments. Consider segment-based drift monitoring when you have clearly defined segments in your data. For example, in manufacturing, you might have different suppliers of raw materials and need to monitor distribution drift separately for each of them.
+
+---
+
+So far the evidently course is great, but also the material in the first two modules is what I learned in the MLOps zoomcamp. Seems like the next modules will be something new, but that will be left for tomorrow.
+
+That is all for today!
+
+See you tomorrow :)

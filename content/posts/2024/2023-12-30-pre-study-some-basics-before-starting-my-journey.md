@@ -1,0 +1,51 @@
+Today, I learned about JASP because I was going to find an alternative program for SPSS. I thought it was a useful program, so I tried to give a turning ear and technical statistics, but it was fun. But before I knew more about JASP, I thought, 'It would be good to review my basic statistical knowledge'.
+
+Fortunately, there is a free Introduction to Statistics course at Coursera by Professor Guenther Walther of Stanford University.
+
+*Homoscedasticity*:
+
+In a homoscedastic dataset, the variance of the errors (residuals) is constant across all levels of the independent variable(s). In simpler terms, the spread of the residuals is the same throughout the range of predictor values.
+
+*Heteroscedasticity*:
+Heteroscedasticity occurs when the variance of the errors is not constant across all levels of the independent variable(s). In other words, the spread of residuals changes as the values of the independent variable(s) change.
+
+![image](https://github.com/ivanstudyblog/ivanstudyblog.github.io/assets/167014511/f17e6eec-c8e0-4c4b-9dee-b716e2f75f56)
+
+The lecture material was as follows:
+
+1. Introduction and Descriptive Statistics for Exploring Data
+2. Producing Data and Sampling
+    * Exploring sampling concepts and experimental design
+    * Topical content such as simple random sampling, bias, observation-to-experiment, and randomized controlled experiments
+    * Contents of patent applications with special industrial insights
+3. Probability
+    * Defining probabilities and learning essential probability rules to solve simple and complex challenges
+    * Topical content such as supplementation, same possible results, addition and multiplication
+4. Normal Approximation and Binomial Distribution
+    * Empirical rules for data and modules for normal approximation
+    * Basic content of normal curves, data standardization, binomial distributions, and random variables
+5. Sampling Distributions and the Central Limit Theorem
+    * Learning about the central limit theorem
+    * Topical content such as differences between parameters and statistics, expected values, and standard errors
+6. Regression
+    * Introduction to regression, correlation coefficients, regression lines, and modules for regression diagnosis
+    * predictions, mean in regression, outliers
+7. Confidence Intervals
+    * Module for creating and interpreting confidence intervals in standard situations
+    * Content topics such as finding confidence intervals using the central limit theorem and estimating standard errors using the bootstrap principle
+8. Tests of Significance
+    * Modules on hypothesis test logic and performing appropriate statistical tests for various samples and situations
+    * Topical content such as p-values, t-tests, and statistical significance versus significance for hypotheses
+9. Resampling
+    * Modules focused on Monte Carlo methods and bootstrap methods used in computer-intensive statistical inference
+    * Learning about the theoretical principles behind these methods and their applications in different contexts, such as regression and confidence interval generation
+10. Analysis of Categorical Data
+    * Modules focused on three important statistical analyses of categorical data
+    * Chi-square test content that tests the relationship between two categorical variables, the color ratio and homogeneity of M&M, and independence
+11. One-Way Analysis of Variance (ANOVA)
+    * Modules for F-tests in the Basic and One-way ANOVA Examples of ANOVA
+    * Contents such as comparing multiple means, using F distribution for ANOVA evaluation, etc
+12. Multiple Comparisons
+    * Modules focused on data snooping and multi-test misgivings in the era of big data
+
+[Original post in Korean](https://50daysml.blogspot.com/2023/12/day-1-12.html)

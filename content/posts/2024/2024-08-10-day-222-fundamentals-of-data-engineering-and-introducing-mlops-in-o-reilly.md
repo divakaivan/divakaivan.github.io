@@ -1,0 +1,240 @@
+## Hello :) Today is Day 222!
+A quick summary of today:
+* read chapter 3: Designing Good Data Architecture of the Data Eng book
+* started Introducing MLOps
+
+
+## Fundamentals of Data Engineering Chapter 3
+
+### What is Data Architecture ?
+
+A definition given by the book: _Data architecture is the design of systems to support the evolving data needs of an
+enterprise, achieved by flexible and reversible decisions reached through a careful
+evaluation of trade-offs._
+
+#### Operational vs Technical data architecture
+
+<img width="967" alt="image" src="https://github.com/user-attachments/assets/50032d39-3a18-44e6-b137-25cb4efdf4bb">
+
+_Operational architecture encompasses the functional require‐
+ments of what needs to happen related to people, processes, and technology. For
+example, what business processes does the data serve? How does the organization
+manage data quality? What is the latency requirement from when the data is pro‐
+duced to when it becomes available to query? Technical architecture outlines how data
+is ingested, stored, transformed, and served along the data engineering lifecycle. For
+instance, how will you move 10 TB of data every hour from a source database to your
+data lake? In short, operational architecture describes what needs to be done, and
+technical architecture details how it will happen._
+
+**Good Data Architecture**
+
+Good data architecture serves business requirements with
+a common, widely reusable set of building blocks while maintaining flexibility and
+making appropriate trade-offs. Bad architecture is authoritarian and tries to cram a
+bunch of one-size-fits-all decisions into a big ball of mud.
+
+### Principles of Good Data Architecture
+
+Following the [AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html) consists of six pillars:
+* Operational excellence
+* Security
+* Reliability
+* Performance efficiency
+* Cost optimization
+* Sustainability
+
+Or [Google Cloud’s Five Principles for Cloud-Native Architecture](https://cloud.google.com/blog/products/application-development/5-principles-for-cloud-native-architecture-what-it-is-and-how-to-master-it) are as follows:
+* Design for automation.
+* Be smart with state.
+* Favor managed services.
+* Practice defense in depth.
+* Always be architecting.
+
+The authors expand on these principles by adding:
+1. Choose common components wisely.
+2. Plan for failure.
+3. Architect for scalability.
+4. Architecture is leadership.
+5. Always be architecting.
+6. Build loosely coupled systems.
+7. Make reversible decisions.
+8. Prioritize security.
+9. Embrace FinOps.
+
+### Major Architecture Concepts
+
+Pre-reqs: domain and service
+
+* A domain is the real-world subject area for which you’re architecting.
+* A service is a set of functionality whose goal is to accomplish a task
+
+As data engineers, we’re interested in four closely related characteristics of data systems:
+
+1. Scalability: Allows us to increase the capacity of a system to improve performance and
+handle the demand. For example, we might want to scale a system to handle a
+high rate of queries or process a huge data set.
+
+2. Elasticity: The ability of a scalable system to scale dynamically; a highly elastic system can
+automatically scale up and down based on the current workload. Scaling up is
+critical as demand increases, while scaling down saves money in a cloud environ‐
+ment. Modern systems sometimes scale to zero, meaning they can automatically
+shut down when idle.
+
+3. Availability: The percentage of time an IT service or component is in an operable state.
+
+4. Reliability: The system’s probability of meeting defined standards in performing its intended
+function during a specified interval.
+
+#### Tight vs Loose Coupling
+
+When designing data architecture, the choice between tight and loose coupling impacts the interdependence of domains, services, and resources. Tight coupling centralizes dependencies, creating highly interconnected systems, while loose coupling decentralizes components, reducing dependencies but requiring clear standards and accountability. Architectures can be single-tier (tightly coupled, prone to failures) or multitier (decoupled, more reliable). Monolithic architectures bundle services tightly, making changes difficult, while microservices promote decentralized, loosely coupled services, allowing independent functionality. Monoliths may be simpler initially but often require gradual decomposition into microservices. Adopting loose coupling and modularity, with an awareness of technological limitations, is ideal.
+
+### Brownfield Versus Greenfield Projects
+
+When designing data architecture, the approach depends on whether you're working on a brownfield or greenfield project. 
+
+**Brownfield projects** involve refactoring existing architecture, requiring an understanding of legacy systems and careful change management. The "strangler pattern" is often preferred, gradually replacing old components to avoid risks and allow reversible decisions.
+
+**Greenfield projects** offer a fresh start, allowing the use of new technologies without legacy constraints. However, it's crucial to avoid "shiny object syndrome" and focus on meeting project goals rather than just using the latest trends.
+
+In both cases, prioritize good architecture principles, flexible decisions, and a positive ROI.
+
+### Examples and Types of Data Architecture
+
+**Data Warehouse**
+
+A data warehouse is a central data hub used for reporting and analysis. Data in a data warehouse is typically highly formatted and structured for analytics use cases. It’s among the oldest and most well-established data architectures.
+
+<img width="924" alt="image" src="https://github.com/user-attachments/assets/47a25037-dc76-4300-9572-62b6cda5f11c">
+
+<img width="969" alt="image" src="https://github.com/user-attachments/assets/c05d9746-33e8-4dd1-b5d9-8803e49f0e97">
+
+
+**First-gen Data Lake**
+
+The data lake emerged during the big data era as a popular architecture, allowing the storage of vast amounts of structured and unstructured data in a central location without tight structural constraints. The first-generation data lake, known as "data lake 1.0," began with HDFS and later moved to cloud-based storage, offering cheap, limitless capacity and flexible processing options. However, it failed to deliver on its promise, becoming a "data swamp" due to poor schema management, data cataloging, and discovery tools. Processing data was cumbersome, and managing Hadoop clusters became expensive, requiring large teams of specialized engineers. While data lakes provided value for tech giants like Netflix and Facebook, many organizations faced spiraling costs and unmanageable data, leading to disappointment.
+
+**Convergence, Next-Generation Data Lakes, and the Data Platform**
+
+In response to the shortcomings of first-generation data lakes, new approaches like the data lakehouse have emerged. Databricks pioneered the lakehouse concept, which integrates the robust data management and ACID transaction support of data warehouses with the flexible storage of data lakes. This marks a convergence between data lakes and data warehouses. Cloud data warehouses have also evolved to resemble data lakes, supporting large-scale queries, diverse data types, and advanced processing technologies. The trend is moving towards unified data platforms that blend the capabilities of both architectures, offered by leading vendors like AWS, Azure, Google Cloud, Snowflake, and Databricks. Future data engineers will likely choose these converged platforms based on specific needs rather than between distinct architectures.
+
+### Modern Data Stack
+
+<img width="971" alt="image" src="https://github.com/user-attachments/assets/ad899b29-d332-4087-b146-7aba79d5fb72">
+
+Key outcomes of the modern data stack are self-service (analytics and pipelines), agile data management, and using open source tools or simple proprietary tools with clear pricing structures
+
+### Lambda Architecture
+
+<img width="977" alt="image" src="https://github.com/user-attachments/assets/8df72fc2-5b35-4380-9791-601603bbf516">
+
+In a Lambda architecture, you have systems operating independently of each other—batch, streaming, and serving. The source system is ideally immutable and append-only, sending data to two destinations for processing: stream and batch. In-stream processing intends to serve the data with the lowest possible latency in a “speed” layer, usually a NoSQL database. In the batch layer, data is processed and transformed in a system such as a data warehouse, creating precomputed and aggre‐ gated views of the data. The serving layer provides a combined view by aggregating query results from the two layers.
+
+### Kappa Architecture
+
+<img width="976" alt="image" src="https://github.com/user-attachments/assets/df5d3cdb-3def-48d6-b83c-e631ce37ec8f">
+
+The central thesis is this: why not just use a stream-processing platform as the backbone for all data handling—inges‐ tion, storage, and serving? This facilitates a true event-based architecture. Real-time and batch processing can be applied seamlessly to the same data by reading the live event stream directly and replaying large chunks of data for batch processing.
+
+### The Dataflow Model and Unified Batch and Streaming
+
+Lambda and Kappa architectures attempted to unify batch and streaming data processing by integrating various tools within the Hadoop ecosystem, though not seamlessly. A key challenge was managing different code paths for batch and stream processing. Kappa used a unified queuing and storage layer but still required different tools for real-time and batch tasks. Modern approaches, like Google's Dataflow model and Apache Beam framework, view all data as events, treating batches as bounded streams. This philosophy, where "batch is a special case of streaming," is now widespread, with frameworks like Flink and Spark adopting similar strategies.
+
+
+## [Introducing MLOps](https://learning.oreilly.com/library/view/introducing-mlops/9781492083283/) Chapter 1: MLOps What and Why
+
+###### I had my eyes on a few books in O'Reilly for a bit (this, Deep Learning at Scale, and Machine Learning Production Systems), but I did not want to sub to them. Today I found that my university supplies a free sub to their materials so now I have access to all books on the website 🥳
+
+MLOps interest over time. (fyi the book is released in 2020)
+
+![image](https://github.com/user-attachments/assets/8d97dfaf-ec59-40f6-aa3c-f43d24a38e1d)
+
+At its core, MLOps is the standardization and streamlining of machine learning life cycle management.
+
+![image](https://github.com/user-attachments/assets/33ce2be0-3811-4808-829c-7125fa9b95af)
+
+Managing machine learning models is challenging due to constantly changing data, shifting business needs, and the need to ensure alignment between model performance and business goals. Communication gaps exist between business, data science, and IT teams, as they use different tools and lack common skills, complicating collaboration. Additionally, data scientists often lack software engineering expertise, leading to difficulties in managing models at scale, especially as team turnover increases and they are required to handle models they didn't originally develop.
+
+![image](https://github.com/user-attachments/assets/d15fae38-abd5-4d0b-b502-14c90a4f5cff)
+
+MLOps pulls knowledge from DevOps:
+
+* Robust automation and trust between teams
+* The idea of collaboration and increased communication between teams
+* The end-to-end service life cycle (build, test, release)
+* Prioritizing continuous delivery and high quality
+
+### MLOps to Mitigate Risk
+
+Deploying machine learning models without MLOps infrastructure is risky because true model performance can only be accurately assessed in the production environment, where data may differ from the training environment. Model performance is sensitive to the production environment, including software and operating system versions, making it crucial to match these with the verified setup. Deploying models is just the beginning; continuous monitoring is essential to ensure models behave as expected, making MLOps critical to mitigate risks and maintain business stability.
+
+### MLOps for Scale
+
+MLOps isn’t just important because it helps mitigate the risk of machine learning models in production; it is also an essential component to massively deploying machine learning efforts (and in turn benefiting from the corresponding economies of scale). Going from one or a handful of models in production to tens, hundreds, or thousands that have a positive business impact requires MLOps discipline.
+
+Good MLOps practices will help teams at a minimum:
+* Keep track of versioning, especially with experiments in the design phase
+* Understand whether retrained models are better than the previous versions (and promoting models to production that are performing better)
+* Ensure (at defined periods—daily, monthly, etc.) that model performance is not degrading in production
+
+## Introducing MLOps Chapter 2: People of MLOps
+
+| Role                        | Role in Machine Learning Model Life Cycle                                                                                                                                                    | MLOps Requirements                                                                                                                                    |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Subject Matter Experts**  | Provide business questions, goals, or KPIs around which ML models should be framed.                                                                                                         | Easy way to understand deployed model performance in business terms.                                                                                  |
+|                             | Continually evaluate and ensure that model performance aligns with or resolves the initial need.                                                                                            | Mechanism or feedback loop for flagging model results that don’t align with business expectations.                                                    |
+| **Data Scientists**         | Build models that address the business question or needs brought by subject matter experts.                                                                                                 | Automated model packaging and delivery for quick and easy (yet safe) deployment to production.                                                        |
+|                             | Deliver operationalizable models so that they can be properly used in the production environment and with production data.                                                                  | Ability to develop tests to determine the quality of deployed models and to make continual improvements.                                              |
+|                             | Assess model quality (of both original and tests) in tandem with subject matter experts to ensure they answer initial business questions or needs.                                           | Visibility into the performance of all deployed models (including side-by-side for tests) from one central location.                                   |
+|                             |                                                                                                                                                                                             | Ability to investigate data pipelines of each model to make quick assessments and adjustments regardless of who originally built the model.            |
+| **Data Engineers**          | Optimize the retrieval and use of data to power ML models.                                                                                                                                  | Visibility into performance of all deployed models.                                                                                                   |
+|                             |                                                                                                                                                                                             | Ability to see the full details of individual data pipelines to address underlying data plumbing issues.                                               |
+| **Software Engineers**      | Integrate ML models in the company’s applications and systems.                                                                                                                              | Versioning and automatic tests.                                                                                                                       |
+|                             | Ensure that ML models work seamlessly with other non-machine-learning-based applications.                                                                                                   | The ability to work in parallel on the same application.                                                                                               |
+| **DevOps**                  | Conduct and build operational systems and test for security, performance, availability.                                                                                                     | Continuous Integration/Continuous Delivery (CI/CD) pipeline management.                                                                               |
+|                             |                                                                                                                                                                                             | Seamless integration of MLOps into the larger DevOps strategy of the enterprise.                                                                      |
+|                             |                                                                                                                                                                                             | Seamless deployment pipeline.                                                                                                                         |
+| **Model Risk Managers/Auditors** | Minimize overall risk to the company as a result of ML models in production.                                                                                                              | Robust, likely automated, reporting tools on all models (currently or ever in production), including data lineage.                                     |
+|                             | Ensure compliance with internal and external requirements before pushing ML models to production.                                                                                           |                                                                                                                                                       |
+| **Machine Learning Architects** | Ensure a scalable and flexible environment for ML model pipelines, from design to development and monitoring.                                                                              | High-level overview of models and their resources consumed.                                                                                           |
+|                             | Introduce new technologies when appropriate that improve ML model performance in production.                                                                                                | Ability to drill down into data pipelines to assess and adjust infrastructure needs.                                                                   |
+
+
+## Introducing MLOps Chapter 3: Key MLOps Features
+
+1. Model Development
+  * establishing business objectives
+  * data sourcing and EDA
+  * feature engineering and selection
+  * training and evaluation
+  * reproducability
+  * responsible AI
+2. Productionalization and Deployment
+  * Model-as-a-service, or live-scoring model
+  * Embedded model
+3. Monitoring
+  * Is the model getting the job done quickly enough?
+  * Is it using a sensible amount of memory and processing time?
+  * Is the model's performance degrading?
+  * Is the model delivering value to the enterprise?
+  * Do the benefits of the model outweigh the cost of developing and deploying it? (And how can we measure this?)
+4. Iteration and Life Cycle: Developing and deploying improved versions of a model is an essential part of the MLOps life cycle, and one of the more challenging. There are various reasons to develop a new model version, one of which is model performance degradation due to model drift, as discussed in the prior section. Sometimes there is a need to reflect refined business objectives and KPIs, and other times, it’s just that the data scientists have come up with a better way to design the model.
+5. Governance: Governance is the set of controls placed on a business to ensure that it delivers on its responsibilities to all stakeholders, from shareholders and employees to the public and national governments. These responsibilities include financial, legal, and ethical obligations. Underpinning all three of these is the fundamental principle of fairness.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+That is all for today!
+
+See you tomorrow :)

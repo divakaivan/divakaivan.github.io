@@ -1,0 +1,672 @@
+# Hello :) Today is Day 273!
+A quick summary of today:
+* covered ch. 9 of [Graph Algs for DS](https://learning.oreilly.com/library/view/graph-algorithms-for/9781617299469/)
+* did my [1st youtube stream](https://www.youtube.com/watch?v=2h8c7rnWUXY)
+
+## Ch. 4 Exploratory graph analysis
+
+### 4.1 Exploring the Twitter network
+
+When going into a neo4j database, by default there is some information about the graph
+
+![image](https://github.com/user-attachments/assets/14277dd1-5b13-4f65-b0f6-f1ea049ce142)
+
+We can visualisa the graph using
+
+```cypher
+MATCH p=()-[r :FOLLOWS]->()
+RETURN p LIMIT 25;
+```
+
+![image](https://github.com/user-attachments/assets/6dbb0af0-ac55-4c72-ada8-b8a9988b75ff)
+
+### 4.2 Aggregating data with Cypher query language
+
+Example:
+
+Calculating the ratio of non-null values of `registeredAt` node property
+
+```cypher
+MATCH (u:User)
+WITH count(*) AS numberOfRows,
+     count(u.registeredAt) AS usersWithRegisteredAtDate
+RETURN toFloat(usersWithRegisteredAtDate) / numberOfRows * 100 AS result
+```
+
+**NOTE** In Neo4j, when we divide an integer value by another integer value, the result will also be the integer data type. If we want the result to be of the float type we need to cast either of the variables to float using the toFloat() function
+
+Counting the number of nodes by labels
+
+```cypher
+MATCH (n)
+RETURN labels(n) AS labels,
+       count(n) AS count;
+```
+
+Retrieving the earliest and last created date values of tweets
+
+```cypher
+MATCH (n:Tweet)
+RETURN min(n.createdAt) AS earliestDate, max(n.createdAt) as lastDate
+```
+
+Extracting datetime attributes
+
+```cypher
+MATCH (t:Tweet)
+WITH t LIMIT 1
+RETURN t.createdAt.year AS year,
+       t.createdAt.month AS month,
+       t.createdAt.day AS day,
+       t.createdAt.epochSeconds AS epochSeconds;
+```
+
+### 4.3 Filtering graph patterns
+
+Counting the number of users who were mentioned in a tweet and discounting the retweet mention pattern with an existential subquery
+
+```cypher
+MATCH (u:User)<-[:MENTIONS]-(tweet:Tweet)
+WHERE NOT EXISTS {
+  (original)<-[:PUBLISH]-(u)<-[:MENTIONS]-(tweet)-[:RETWEETS]->(original)
+}
+RETURN count(distinct u) AS countOfUsers
+```
+
+### 4.4 Counting subqueries
+
+Retrieving the top five most mentioned users
+
+```cypher
+MATCH (u:User)<-[:MENTIONS]-(:Tweet)
+WITH u, count(*) AS mentions
+ORDER BY mentions DESC LIMIT 5
+RETURN u.username AS user, mentions
+```
+
+There is nothing wrong with the statement above. However, you will frequently be performing multiple aggregations in a single query. When performing multiple aggregations in a query, you must be very mindful of the query cardinality (number of intermediate rows in the query). A simple yet very effective syntax to not increase the cardinality when counting the number of relationships a node has is to use the count {} operator and describe the desired graph pattern you want to count, as shown in the following listing.
+
+Convenient way of retrieving the top five most mentioned users by not increasing main query cardinality
+
+```cypher
+MATCH (u:User)
+WITH u, count { (u)<-[:MENTIONS]-() } AS mentions
+ORDER BY mentions DESC LIMIT 5
+RETURN u.username AS user, mentions
+```
+
+### 4.5 Multiple aggregations in sequence
+
+when performing multiple aggregation in sequence we must be careful with the intermediate cardinality
+
+Say we have 2 MATCH clauses in a row
+
+```cypher
+MATCH (u:User)
+MATCH (t:Tweet)
+RETURN count(*) AS numberOfRows,
+       count(u) AS countOfUsers,
+       count(t) AS countOfTweets
+```
+
+The cardinality problem in Cypher queries arises when we have multiple MATCH or OPTIONAL MATCH clauses executed in sequence without reducing the intermediate results. Each MATCH or OPTIONAL MATCH clause produces a number of rows, and if we don’t control this, subsequent clauses will be executed for every row produced by the previous one. This can lead to an exponential growth in the number of rows, causing inefficient queries and incorrect results.
+
+To prevent this, we should reduce the cardinality after each MATCH or OPTIONAL MATCH clause before moving on to the next one. The key techniques are:
+
+* Using Aggregating Functions: after each MATCH clause, we can use an aggregation function like count() to reduce the number of rows produced
+
+```cypher
+MATCH (u:User)
+WITH count(u) AS countOfUsers
+MATCH (t:Tweet)
+RETURN count(*) AS numberOfRows, countOfUsers, count(t) AS countOfTweets
+```
+
+This reduces the number of rows between the MATCH clauses, allowing subsequent clauses to be executed only once.
+
+* Using the WITH Clause: we can reduce intermediate results by using WITH to pass along only the necessary data; by aggregating after each MATCH we ensure that subsequent MATCH clauses operate on a single or a reduced set of rows, avoiding exponential row growth
+
+Example:
+
+```cypher
+MATCH (u:User)
+WHERE u.username = "IainLJBrown" 
+OPTIONAL MATCH (u)-[:PUBLISH]->(rt)<-[:RETWEETS]-()
+WITH u, count(rt) AS numberOfRetweets 
+OPTIONAL MATCH (u)<-[:MENTIONS]-(t)
+WHERE NOT (t)-[:RETWEETS]->()
+WITH u, numberOfRetweets, count(t) AS mentionsInOriginalTweets 
+OPTIONAL MATCH (u)<-[:MENTIONS]-(ort)
+WHERE (ort)-[:RETWEETS]->() AND NOT (ort)-[:RETWEETS]->()<-[:PUBLISH]-(u)
+WITH u, numberOfRetweets, mentionsInOriginalTweets, count(ort) AS mentionsInRetweets
+RETURN u.username AS user, numberOfRetweets, mentionsInOriginalTweets, mentionsInRetweets
+```
+
+In the above query, after each OPTIONAL MATCH clause, the cardinality is reduced using the count() function. This ensures the query doesn’t balloon out of control in terms of the number of rows, and each clause is executed only once for the necessary entities.
+
+## Ch. 5 Introduction to social network analysis
+
+An essential aspect of characterizing any network is to look at the node degree distribution. In simple terms, the node degree is the number of links each node has. In a random network, the degree distribution will follow the Gaussian distribution
+
+![image](https://github.com/user-attachments/assets/f6cac7de-1302-4d63-a722-92a77f8e074f)
+
+The vast majority of nodes have roughly the same number of links. There won’t be many hugely popular nodes, but there won’t be many isolated nodes either.
+
+
+However, the Gaussian distribution is most often used for independent observations. On the other hand, a graph consists of highly interconnected observations that are not independent. It turns out that almost no real-world network follows the random network degree distribution
+
+When PageRank was developed by Google, they discovered that **the web** degree distribution follows a different pattern
+
+![image](https://github.com/user-attachments/assets/c67dd23c-8e05-4c08-be71-a87b051d5fac)
+
+
+### 5.1 Follower network
+
+This chapter will introduce some community detection and centrality graph algorithms. The **community detection algorithms** will be used to characterize the network and also find tightly connected groups of users. In the context of networks, a community refers to a densely connected group of nodes, whose members have comparatively fewer connections to other communities in the network
+
+![image](https://github.com/user-attachments/assets/41762e52-3c55-44ab-b283-bdc109a0e67f)
+
+The metrics used to identify important or influential nodes in the graph are called centrality measures, and the algorithms that calculate them are called **centrality algorithms**. For example, the most basic metric to determine a node’s importance is degree centrality, which simply counts the number of relationships a node has. The higher the count of relationships is, the more influential the node is in the network.
+
+**Node degree distribution**
+
+One of the fundamental characteristics of a network is the node degree distribution. With a directed network, you can split the degree distribution into in-degree and out-degree distribution. The node in-degree counts the number of incoming relationships, and the out-degree counts the number of outgoing connections per node.
+
+Evaluating the node out-degree distribution with the apoc.agg.statistics function
+
+```cypher
+MATCH (u:User)
+WITH u, count{ (u)-[:FOLLOWS]->() } AS outDegree
+RETURN apoc.agg.statistics(outDegree)
+```
+
+| Metric      | Value               |
+|-------------|---------------------|
+| Total       | 3,594               |
+| Min         | 0                   |
+| MinNonZero  | 1.0                 |
+| Max         | 143                 |
+| Mean        | 6.924874791318865   |
+| 0.5 (Median)| 2                   |
+| 0.99        | 57                  |
+| 0.75        | 8                   |
+| 0.9         | 21                  |
+| 0.95        | 32                  |
+| Stdev       | 11.94885358058576   |
+
+Node out-degree distribution users' follows
+
+![image](https://github.com/user-attachments/assets/cbb5db8e-f2d0-4e91-846c-b23789fcf76f)
+
+### 5.2 Introduction to the Neo4j Graph Data Science library
+
+The Neo4j Graph Data Science library is a plugin for Neo4j that features more than 50 graph algorithms, ranging from community detection and centrality to node-embedding algorithms and link prediction pipelines—and [more](https://neo4j.com/docs/graph-data-science/current/). 
+
+Graph algorithms in the GDS library are executed on a projected in-memory graph structure separate from the graph stored in the database. To execute graph algorithms with the GDS library, you must first project an in-memory graph. The projected graph is stored entirely in-memory, using an optimized data structure for scalable and parallel graph algorithm execution. You can create a projected in-memory graph using either native projection or Cypher projection
+
+![image](https://github.com/user-attachments/assets/2b4df98b-3d44-4b22-8c31-3169612afcab)
+
+Native projection is a bit more limited in selecting or filtering a specific subgraph you want to project, as you can only filter based on node labels and relationship types. However, it is the recommended way of projecting a graph as it is highly performant due to reading data directly from Neo4j storage.
+
+The second available option for creating an in-memory graph is the Cypher projection. With it, you get all the flexibility of Cypher query language to select or filter any specific subgraph you might want to project. Of course, Cypher projection has a drawback, as it is slower than native projection and generally recommended only for the experimental or explorational phase of a project.
+
+As the in-memory graph projection can be costly when dealing with large graphs, the GDS library also features a graph catalog. The graph catalog comes in handy when you want to execute multiple graph algorithms on the same projected graph. Instead of having to create an in-memory graph for each algorithm execution separately, you can create an in-memory graph once and then execute multiple graph algorithms on it. The projected graph can then be accessed via its name when executing graph algorithms, so the term named graph stuck with projected graphs stored in a graph catalog. Once the in-memory graph is created, you can execute graph algorithms on top of it.
+
+Each algorithm has four modes of execution, depending on the use case:
+
+* `stream` — Returns results as a stream of records and does not store results
+
+* `stats` — Returns a summary statistics of the result and does not store results
+
+* `mutate` — Writes the results back to the projected in-memory graph. This mode can only be used in combination with a named graph stored in a graph catalog. It is very useful when you want to use an output of one graph algorithm as an input to another
+
+* `write` — Writes the results back to the Neo4j database graph
+
+#### Graph catalog and native projection
+
+Native projection syntax to create a named graph in the graph catalog
+
+```cypher
+CALL gds.graph.project(
+    graphName,
+    nodeProjection,
+    relationshipProjection,
+    optional configuration
+)
+```
+
+GDS procedures are executed using the CALL clause in combination with the procedure name. The procedure to store a named graph in the graph catalog with native projection is called gds.graph.project(). It contains three mandatory and one optional parameter. The first parameter is used to name the graph, under which it will be accessed when executing graph algorithms. The second parameter, called nodeProjection, defines the subset of nodes you want to project. Similarly, the relationshipProjection parameter specifies which relationships should be considered when creating an in-memory graph. An important thing to note is that a relationship will be skipped during projection if both adjacent nodes are not described in the nodeProjection parameter. In GDS terms, the starting node of the relationship is called the source node and the end node is called the target node.
+
+The below statement uses native projection to store an in-memory graph. The first parameter specifies its name, which will be used to access it when executing graph algorithms. The second parameter defines which nodes you want to include in the projection. When you only want to project a single type of node, you can define the desired node label as a string. Similarly, when you only want to project one type of relationship in the third parameter, you can specify the type as a string.
+
+```cypher
+CALL gds.graph.project('follower-network', 'User', 'FOLLOWS') 
+```
+
+### 5.3 Network characterization
+
+#### Weakly connected component (WCC) algorithm
+
+A WCC is a set of nodes within the graph, where a path exists between all nodes in the set if the direction of relationships is ignored. A WCC can be considered an “island” that cannot be reached from other graph components. While the algorithm identifies connected sets of nodes, its output can help you evaluate how disconnected the overall graph is.
+
+Understanding the connectivity and how connected the overall graph is sets the stage for more detailed investigations, such as community detection or centrality analysis. The WCC algorithm is probably a graph algorithm that should be executed as the first step of any graph analysis to evaluate graph connectivity.
+
+The WCC algorithm is executed using the `write` mode. As mentioned, the write mode stores the results back to the Neo4j database but also provides summary statistics of the algorithm result.
+
+_Graph algorithm procedure syntax_
+
+```cypher
+CALL gds.<algorithm>.<mode>(namedGraph, {optional configuration})
+```
+
+When using the write mode of an algorithm, you need to provide the mandatory writeProperty parameter, which specifies the name of the node property the algorithm results will be stored to. The procedure to execute the WCC algorithm is gds.wcc.
+
+_Executing the WCC algorithm on the follower network and storing the results as a followerWcc node property_
+
+```cypher
+CALL gds.wcc.write('follower-network', {writeProperty:'followerWcc'})
+YIELD componentCount, componentDistribution
+```
+
+Here are summary statistics from the above:
+
+![image](https://github.com/user-attachments/assets/8351d3d7-cae2-491a-bd6d-1b198dbf6b86)
+
+There are 547 disconnected components in the followers network, and the largest contains 2,997 members. Most real-world networks have a single connected component containing most of the nodes in the network and a couple of disconnected peripheral components. As the dataset you are analyzing is only a portion of a larger network, having a higher count of components is not unusual, due to many missing users and relationships that would otherwise connect various parts of the network if they were included. 
+
+The `p90` result, or the 90th percentile of the component size, has a value of 1, which indicates that 90% of the components have only a single member. When a component contains only a single member, this means the node has no relationships.
+
+#### Strongly connected components (SCC) algorithm
+
+A strongly connected component (SCC) is a subgraph of a directed graph in which a path exists between all its nodes. The only difference between the WCC and SCC algorithms is that the SCC algorithm considers relationship directions. Therefore, the SCC algorithm is only applicable to a directed graph. If the relationship direction is ignored, then you are dealing with WCCs.
+
+The SCC algorithm is useful when directed paths and reachability play an important role. For example, imagine a road network where the nodes represent intersections and relationships represent road connections. For example, many large city centers have a lot of one-way road connections. Using the SCC algorithm, you could evaluate the consequences of closing one or several road connections and how it would affect the reachability of places within the city.
+
+![image](https://github.com/user-attachments/assets/072bc182-2273-4040-b0ef-ce359f067579)
+
+_Executing the SCC algorithm on the follower network and storing the results as a followerScc node property_
+
+```cypher
+CALL gds.scc.write('follower-network', {writeProperty:'followerScc'})
+YIELD componentCount, componentDistribution
+```
+
+Summary statistics:
+
+![image](https://github.com/user-attachments/assets/3aa9549c-5e36-4946-9be2-fae8027072a9)
+
+As expected, the count of SCCs is higher than the count of WCCs. There are 2,704 SCCs, and the largest one contains 796 members.
+
+#### Local clustering coefficient (LCC)
+
+The local clustering coefficient (LCC) is a metric that quantifies how connected or close the neighbors of a particular node are. The LCC measures the average probability that two neighbors of a node are connected. Therefore, the value of the LCC ranges from 0 to 1. The LCC value of 0 indicates that the neighboring nodes have no connections between each other. On the other hand, the LCC value of 1 indicates that the network of neighbors forms a complete graph, where all the neighbors are connected.
+
+![image](https://github.com/user-attachments/assets/c01f9f25-2183-412a-bb33-d185b2ba5562)
+
+The LCC algorithm provides a metric to evaluate how strongly the neighbors of a node are connected. You can calculate the LCC value of a single node by dividing the number of existing links between neighbor nodes with the number of possible links between neighbor nodes
+
+_Calculating the LCC on the directed followers network_
+
+```cypher
+MATCH (u:User)
+OPTIONAL MATCH (u)-[:FOLLOWS]-(n)
+WITH u,count(distinct n) AS neighbors_count 
+OPTIONAL MATCH (u)-[:FOLLOWS]-()-[r:FOLLOWS]-()-[:FOLLOWS]-(u)
+WITH u, neighbors_count, count(distinct r) AS existing_links 
+WITH u,
+     CASE WHEN neighbors_count < 2 THEN 0 ELSE
+       toFloat(existing_links) / (neighbors_count * (neighbors_count - 1))
+       END AS lcc
+SET u.lcc = lcc
+```
+
+1. Matches all User nodes
+2. Counts the number of their distinct neighbors
+3. Counts the number of distinct links between neighbors
+4. Calculates the LCC value
+5. Stores the LCC value under the lcc node property
+
+### 5.4 Identifying central nodes
+
+#### PageRank
+
+PageRank was designed by Larry Page and Sergey Brin (1999) and helped make Google search what it is today. PageRank measures the transitive or directional influence of nodes. For example, the node degree quantifies the influence or importance of a node by considering only its direct neighbors. In contrast, PageRank also considers the indirect relationships with other nodes in the graph spanning over multiple hops. To put it into our Twitter subgraph context, if, for example, Elon Musk or Andrew Ng follows you, you gain more influence than if I follow you. PageRank evaluates the number of followers a particular node has as well as how influential those followers are.
+
+_Executing PageRank on the followers network_
+
+```cypher
+CALL gds.pageRank.write('follower-network',
+  {writeProperty:'followerPageRank'})
+```
+
+_Examining the top five followers for the highest-ranking users_
+
+```cypher
+MATCH (u:User)<-[:FOLLOWS]-(f)
+WHERE u.username IN
+  ["elonmusk", "NASA", "wmktech", "Twitter", "Wajdialkayal1"]
+WITH u,f
+ORDER BY f.followerPageRank DESC 
+RETURN u.username AS user,
+       round(u.followerPageRank, 2) AS pagerankScore,
+       collect(f.username)[..5] AS topFiveFollowers
+ORDER BY pagerankScore DESC
+```
+
+#### Personalized PageRank algorithm
+
+The Neo4j GDS library also supports the personalized PageRank variation. In the PageRank definition, a web surfer can get bored and randomly jump to other nodes. With the personalized PageRank algorithm, you can define which nodes the web surfer should jump to when they get bored. It can be said that by defining the sourceNodes to which the surfer is biased to jump, you are effectively inspecting the influence of nodes by looking through a particular node’s or multiple nodes’ point of view.
+
+_Running the personalized PageRank algorithm from the point of view of users who registered in 2016_
+
+```cypher
+MATCH (u:User)
+WHERE u.registeredAt.year = 2016
+WITH collect(u) AS sourceNodes 
+CALL gds.pageRank.stream('follower-network', {sourceNodes: sourceNodes})
+YIELD nodeId, score 
+RETURN gds.util.asNode(nodeId).username AS user, score
+ORDER BY score DESC
+LIMIT 5;
+```
+
+#### Dropping the named graph
+
+After completing the planned graph algorithms execution sequence, it is recommended to drop the projected graph from memory using `CALL gds.graph.drop('your_network_name')`
+
+## Ch. 6 Projecting monopartite networks
+
+Overview:
+
+* Translating an indirect graph pattern into a direct relationship
+* Using Cypher projection to project an in-memory graph
+* Presenting self-loops
+* Introducing weighted variations of degree and PageRank centrality algorithms
+
+Most graph algorithms are designed to be executed on a monopartite network, where only a single node and relationship type are present. However, the Twitter social network schema contains multiple node types and relationships. Instead of adjusting graph algorithms to support multipartite networks (multiple node and relationship types), the general approach is to first project a monopartite network (single node and relationship type).
+
+### 6.1 Translating an indirect multihop path into a direct relationship
+
+With Neo4j Graph Data Science (GDS) we could take two different approaches to accomplish this task
+
+![image](https://github.com/user-attachments/assets/819e8558-a84e-45ae-9c9c-47c50f4a5d87)
+
+To create a monopartite retweet network using native projection, you must first materialize it in your Neo4j database. However, native projection does not allow for custom network transformations during graph loading. In contrast, Cypher projection enables you to load a virtual graph into memory. A virtual graph is one that is not stored in the database but is constructed only at the time of projection. This capability allows for custom transformations without the need to store them in the database, making it easier to explore and analyze different graph projections while keeping your graph database organized. Cypher projection utilizes the full expressiveness of the Cypher query language, allowing you to select, filter, and transform the graph before projection. 
+
+#### Cypher projection
+
+Cypher projection is a more flexible and expressive approach to projecting an in-memory graph. As you might deduce from the feature’s name, you can use Cypher statements to define the nodes and relationships you want to load in the in-memory graph. The Cypher projection function is called `gds.graph.project` and has three mandatory and two optional parameters.
+
+```cypher
+MATCH (sourceNode)-[relationship]->(targetNode)
+RETURN gds.graph.project(
+   'graph',
+   sourceNode,
+   targetNode,
+   {dataConfig},
+   {configuration} 
+) YIELD
+    graphName,
+    nodeCount,
+    relationshipCount
+```
+
+1. Projected graph name
+2. Source node of a relationship
+3. Target node of a relationship
+4. Optional property and type configuration map
+5. Optional parameter map to define undirected relationships
+
+_You can think of Cypher projection as using Cypher statements to describe relationships of a projected graph, where each connection is defined with its source and target nodes. First, you must use the Cypher syntax to match the source and target nodes of the relationships you want to project. As mentioned, you can match existing relationships in the database or define virtual connections not materialized in the database. Once you have specified the source and target nodes of the desired relationships, you can use the gds.graph.project function in a WITH or RETURN clause to project a graph instead of having to use the CALL clause. The first parameter of the gds.graph .project function is used to define the name of the projected in-memory graph. On the other hand, the second and third parameters describe the source and target nodes of the projected relationship. The fourth parameter is optional and is used to specify node and relationship properties and their labels or types, if needed. By defining node labels and relationship types, you can efficiently filter them at algorithm runtime._
+
+### 6.2 Retweet network characterization
+
+**Degree centrality**
+
+_Evaluating the out-degree distribution of the inferred retweet amplification network_
+
+```cypher
+CALL gds.degree.stats('amplify')
+YIELD centralityDistribution
+```
+
+Top 5 users by out-degree:
+
+![image](https://github.com/user-attachments/assets/fc6e22a1-a7f4-4dc9-a47a-20576ae87de9)
+
+### 6.3 Identifying the most influential content creators
+
+We can achieve that by following the below steps:
+
+1. Ignore self-loops during projection (like retweeting your own tweets)
+2. Execute the weighted variant of the PageRank algorithm
+
+![image](https://github.com/user-attachments/assets/4e9b77bf-581d-4ae4-8f1a-2fb1d2ebd928)
+
+_Executing the PageRank algorithm on the retweet amplification network with no self-loops_
+
+```cypher
+CALL gds.pageRank.stream('amplify-noselfloops',
+  {relationshipWeightProperty:'weight'})
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).username AS user, score
+ORDER BY score DESC
+LIMIT 5
+```
+
+Result:
+
+![image](https://github.com/user-attachments/assets/8c38c5e7-7799-4424-9f4c-b047d713f58a)
+
+## Ch. 7 Inferring co-occurrence networks based on bipartite networks
+
+Imagine we're working in a marketing analytics role for a company focused on natural language processing (NLP) and knowledge graphs. Our boss suggests improving the hashtag strategy for the content published on Twitter. We've been tasked with identifying relevant hashtags to better target the company’s ideal customer. Since the Twitter dataset we've been using contains tweets related to NLP and knowledge graphs, we can analyze the hashtags in the dataset to determine which ones the company should focus on.
+
+Our initial thought might be to use the PageRank algorithm to identify the most important hashtags. However, we need to remember that graph algorithms like PageRank typically expect monopartite networks as input, or at least networks where influence can flow through all connections. In a bipartite network, one type of node has only incoming relationships, while the other type has only outgoing connections. If we were to run PageRank on this bipartite network of tweets and hashtags, which nodes would come out on top?
+
+Since tweets don’t have any incoming relationships, their PageRank score will equal the chance of a web surfer randomly landing on them. With the default value of the damping factor of 0.85, the PageRank score for nodes with no incoming connections is 0.15. On the other hand, hashtags have only incoming relationships. The influence flows from tweets to hashtags but does not flow further, as there are no outgoing connections from hashtags. In practice, the PageRank rank of hashtags would be equal to their count of incoming relationships (in-degree). However, the actual values of PageRank and in-degree would be different due to distinct score calculation techniques.
+
+The goal is to determine the most important and relevant hashtags in the dataset. If the definition of hashtag importance is as simple as their frequency, then using the in-degree metric of the Tag nodes would suffice.
+
+But some hashtags in the dataset may not be relevant to the marketing objective, and focusing only on the most frequently mentioned ones could cause important hashtags to be overlooked. Additionally, combining certain hashtags could extend content reach to a broader audience. The goal is to identify both key hashtags and those that can be used together to increase virality. A useful technique for this is analyzing co-occurrence networks, which show how often pairs of hashtags appear together in tweets. This method helps identify communities of hashtags that are frequently used in combination.
+
+The below pic shows the co-occurrence network of keywords in medical articles. Co-occurrence networks are constructed by connecting pairs of entities in the text using a set of criteria defining co-occurrences. The co-occurrence definition can vary from scenario to scenario. In this example, co-occurrence is defined as two keywords occurring in the same article. The more times a pair of keywords are present in the same article, the stronger the connection is between the two.
+
+![image](https://github.com/user-attachments/assets/33de941b-dfa3-47e7-809e-a44e4a6802bf)
+
+_Transforming a bipartite network into a co-occurance network_
+
+![image](https://github.com/user-attachments/assets/ac0d5ec1-5cbc-4e75-aeec-295efe0f2630)
+
+```cypher
+MATCH (s:Tag)<-[:HAS_TAG]-(:Tweet)-[:HAS_TAG]->(t:Tag)
+CREATE (s)-[:CO_OCCURRENCE]->(t);
+```
+
+To find communities or clusters of hashtags that form a topic, we can utilize community detection algorithms like the label propagation algorithm (LPA). LPA is an algorithm to evaluate the community structure of a network. Most of the literature on the internet introduces the LPA as a semisupervised algorithm in which you can input initial communities for some nodes in the network. However, here the unsupervised variant of the LPA is used, as no initial communities are presented. The unsupervised variant of the LPA works as follows. First, it assigns a unique community label to each node. Then, it iterates over the network and updates each node label to the one most of its neighbors have. The idea behind this iteration is that a single community label can quickly become dominant in a densely connected group of nodes. Once the LPA reaches convergence, the algorithm stops, and the resulting node labels represent their communities.
+
+![image](https://github.com/user-attachments/assets/4f9000fe-c340-4638-8b0d-01e2d367aecb)
+
+## Ch. 8 Constructing a nearest neighbor similarity network
+
+### 8.1 Feature extraction
+
+Nodes with similar roles do not have to be next to one another in the network. For example, you could say users with a large following have a role in producing certain types of content. There could be multiple users with a large following, and they don’t have to follow one another or be close in the network, but they still hold a similar role. We can encode a node’s local neighborhood by counting its graphlets. A graphlet is a position of a node in a distinctly connected subgraph consisting of k nodes.
+
+**Motifs**: small, recurring subgraphs or patterns found within a larger graph that occur significantly more often than would be expected by random chance. These patterns typically involve a small number of nodes (usually 3-5 nodes) and specific connectivity
+
+**Graphlets**: small, induced subgraphs of a fixed size (usually up to 5 nodes) that represent all possible non-isomorphic configurations of nodes and edges in a graph. Unlike motifs, graphlets don't focus on the frequency of appearance but rather on the specific structure of the subgraphs
+
+![image](https://github.com/user-attachments/assets/69eacfbe-8b5a-4f51-9a75-4a5aeb8da3a2)
+
+What is the difference between the two? A motif is a distinctly connected subgraph, while a graphlet describes a node’s position in the motif. For example, if you look at motif 1, you can observe that it consists of three nodes and two relationships. With motifs, you only count how often this pattern occurs in a network. On the other hand, you can observe there are three options for a node position in this motif 1; therefore, there are three graphlets available. Motifs are used to characterize a network structure (Kim et al., 2011), while graphlets come in handy when you want to describe a local neighborhood of a node (Pržulj et al., 2004).
+
+#### Betweenness centrality
+
+An graph algorithm used to measure the importance or influence of a node in a network by calculating how often that node appears on the shortest paths between other nodes. It highlights nodes that serve as bridges or connectors within the network, playing a key role in the flow of information or resources.
+
+1. Projecting the in-memory graph that describes the follower network and includes all the precalculated node features
+
+```cypher
+CALL gds.graph.project('knnExample','User', 'FOLLOWS',
+ {nodeProperties:['tweetCount', 'retweetRatio', 'timeToRetweet', 'inDegree',
+  'outDegree', 'friendCount', 'graphlet5', 'graphlet8', 'graphlet11']})
+```
+
+2. Mutating the betweenness centrality algorithm
+
+```cypher
+CALL gds.betweenness.mutate('knnExample', {mutateProperty:'betweenness'})
+```
+
+#### Closeness centrality
+
+It is a measure that indicates how close a node is to all the other nodes in the network. The algorithm starts by calculating the shortest paths from a node to all the other nodes in the network. Once the shortest paths are calculated, the algorithm sums the distance to all the other nodes. By default, it returns an inverse of the distance sum so that a higher score means that a node has a higher closeness centrality rank. One can interpret closeness as the potential ability to reach all the other nodes as quickly as possible.
+
+1. Mutating the closeness centrality algorithm
+
+```cypher
+CALL gds.closeness.mutate('knnExample',
+  {mutateProperty:'closeness', useWassermanFaust: true})
+```
+
+### 8.2 Constructing the nearest neighbor graph
+
+After manually extracting features (above), the second step is to group or cluster users into segments
+
+#### Evaluating features
+
+1. We need to store the mutated properties to the database
+
+```cypher
+CALL gds.graph.writeNodeProperties('knnExample',
+  ['betweenness', 'closeness'])
+```
+
+2. Identifying the five most frequently correlating pairs of features
+
+```cypher
+WITH ['tweetCount', 'retweetRatio', 'timeToRetweet', 'friendCount',
+      'inDegree', 'outDegree', 'graphlet5', 'graphlet8',
+      'graphlet11', 'closeness', 'betweenness'] AS features
+MATCH (u:User)
+UNWIND features as feature1
+UNWIND features as feature2                                      #1
+WITH feature1,
+     feature2,
+     collect(u[feature1]) as vector1,
+     collect(u[feature2]) as vector2
+ 
+WHERE feature1 < feature2                                        #2
+RETURN feature1,
+       feature2,
+       gds.similarity.pearson(vector1, vector2) AS correlation   #3
+ORDER BY correlation DESC LIMIT 5
+```
+
+1. Uses two UNWINDs to compare each feature to all the others
+
+2. Avoids comparing a feature with itself and removes duplicates
+
+3. Calculates the correlation
+
+![image](https://github.com/user-attachments/assets/eb8b1118-0038-40a6-a083-1ecad0acb008)
+
+It appears that some of the features are highly correlated. For example, the friendCount highly correlates with graphlet5, graphlet11, and betweenness features. Also, the graphlet8 variable correlates with the outgoing degree. To remove some of the highly correlated pairs of features, you will ignore the friendCount, graphlet8, and graphlet5 features from your segmentation process.
+
+3. Mutating the hashtag co-occurrence network to the in-memory graph
+
+```cypher
+WITH ['tweetCount', 'retweetRatio', 'timeToRetweet','inDegree',
+      'outDegree', 'graphlet11', 'closeness', 'betweenness'] AS features
+MATCH (u:User)
+UNWIND features as feature
+WITH feature,
+     apoc.agg.statistics(u[feature],
+                        [0.5,0.75,0.9,0.95,0.99]) as stats
+RETURN feature,
+       round(stats.min,2) as min,
+       round(stats.max,2) as max,
+       round(stats.mean,2) as mean,
+       round(stats.stdev,2) as stdev,
+       round(stats.`0.5`,2) as p50,
+       round(stats.`0.75`,2) as p75,
+       round(stats.`0.9`,2) as p90,
+       round(stats.`0.95`,2) as p95,
+       round(stats.`0.99`,2) as p99
+```
+
+<img width="493" alt="image" src="https://github.com/user-attachments/assets/5cd4466c-a205-4cd9-baa9-acedfbc8594e">
+
+The first thing we can noticed is that more than 95% of users have a graphlet11 count of 0. We could drop the graphlet11 feature due to its low variance; however, will keep it in this example case. The closeness centrality scores range from 0.0 to 0.25 with an average of 0.04. On the other hand, the betweenness centrality is not normalized, so the scores are much higher, as it ranges from 0.0 to nearly 200,000.
+
+### 8.3 User segmentation with the community detection algorithm
+
+The last step in the user segmentation process is to execute a community detection algorithm to identify groups or segments of users.
+
+The Louvain algorithm can be used to detect communities or segments of users by grouping densely connected nodes in the network. Unlike the label propagation algorithm (LPA), which serves a similar function, Louvain uses a different mathematical approach to identify these communities
+
+Here is how Louvian can be used:
+
+```cypher
+CALL gds.louvain.mutate('knnExample',
+  {relationshipTypes:['SIMILAR'], mutateProperty:'userSegmentation'})
+```
+
+## Ch. 9 Node embeddings and classification
+
+**Adjacency matrix**
+
+![image](https://github.com/user-attachments/assets/a607b8bf-f196-4f79-8795-167fcccf2e83)
+
+Suppose you want to train a machine learning model and, somehow, use the network structure information as an input feature. Let’s say you use an adjacency matrix as an input. There are a couple of problems with this approach:
+
+* There are too many input features
+* Machine learning models are dependent on the size of the graph
+* Overfitting can become a problem
+
+If we add or remove a single node from the graph, the size of the adjacency matrix changes and the model is no longer functional, as there is a different number of input features
+
+In practice, we would want to embed a node’s local representation to compare nodes with similar neighborhood topology, instead of using all relationships between nodes as a feature input. Node embedding techniques try to solve these issues by learning lower-dimensional node representation for any given network. The learned node representations or embeddings should automatically encode the network structure so that the similarity in the embedding space approximates the similarity in the network. _A key message is that the node representations are learned instead of manually engineered._ We can achieve this through node embedding models.
+
+A node embedding model takes the high-dimensional representation of a graph as an input and outputs a lower-dimensional representation. 
+
+![image](https://github.com/user-attachments/assets/6b514e61-7226-4d2b-b15c-9ba85339cf35)
+
+### 9.1 Node embedding models
+
+Node embedding models aim to produce lower-dimensional representations of nodes, while preserving network structure information. These lower-dimensional representations can then be used as feature inputs for various machine learning tasks, such as node classification, link prediction, and community detection, thereby simplifying the computational complexity and potentially improving the performance of models.
+
+#### Homophily vs. structural roles approach
+
+A common approach is to represent nodes in the embedding space so that neighboring nodes in the graph are close in the embedding space - this is designed under the **homophily assumption** that connected nodes tend to be similar or have similar labels in a downstream machine learning workflow
+
+![image](https://github.com/user-attachments/assets/9b8feaaa-cfc3-4b03-902f-a42e46c1b989)
+
+**Structural roles approach**
+
+![image](https://github.com/user-attachments/assets/90eb226f-081c-4118-b288-e1ba15a799bf)
+
+The node embedding models used depends on the downstream task you need to complete
+
+#### Inductive vs. transductive embedding models
+
+The difference between inductive and transductive node embedding models is in their ability to encode new unseen nodes during training
+
+_When dealing with a **transductive node embedding algorithm**, you cannot calculate embeddings for nodes not seen during the initial embedding calculation. You can consider transductive models as creating a vocabulary during initial computation, where the key of the vocabulary represents a node and its value represents the embedding. If a node was not seen during the initial computation, it is not present in the vocabulary; hence, you cannot simply retrieve the embeddings for the new unseen nodes. If you want to calculate the embeddings for the new nodes, you must calculate the embeddings for the whole graph, meaning all the previously observed nodes as well as the new nodes. Since the embeddings might change for existing nodes, you must also retrain the classification model._
+
+_On the other hand, **inductive node embedding models** can calculate embeddings for unseen nodes during the initial computation. For example, you can train a model based on the initial computation of node embeddings. When a new node is introduced, you can calculate the embedding for the new node without recalculating embeddings for the whole graph. Likewise, you don’t need to retrain the classification model for every new node. Encoding previously unseen nodes is a great advantage when dealing with growing or multiple separate graphs. For instance, you could train a classification model on a single graph and then use it to predict node labels for nodes of different separate graphs._
+
+### 9.2 and 9.3 Node classification task
+
+This part of the chapter introduced a task to predict the language of new streams on Twitch.tv. The premise is that if streams share audiences then we can predict the language of upcoming streamers. 
+
+I covered this part on stream today: [https://www.youtube.com/watch?v=2h8c7rnWUXY](https://www.youtube.com/watch?v=2h8c7rnWUXY)
+
+---
+
+I guess something else I can do on stream is continue with the Neo4j courses which are publicly free, and I don't have to worry about showing content that's behind a paywall. 
+
+That is all for today!
+
+See you tomorrow :)

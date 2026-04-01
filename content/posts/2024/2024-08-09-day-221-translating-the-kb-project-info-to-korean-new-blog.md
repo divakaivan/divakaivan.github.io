@@ -1,0 +1,47 @@
+## Hello :) Today is Day 221!
+A quick summary of today:
+* getting the project closer to submission
+* welcome to the new blog
+
+### Firstly - the new blog is ready
+
+This is the 1st post in the new blog. I cannot believe that I transferred ~100 posts yesterday. I like this new blog as it is in markdown, all on github, and the UI highly customisable. 
+
+I added some of my projects in the Projects tab at the top as well. There is also a 'hidden' categories page where the below stats can be seen:
+
+<img width="272" alt="image" src="https://github.com/user-attachments/assets/6d607924-018d-4963-9fb1-0963dcfcb038">
+
+This is a summary of the tags I used on my posts. I have not beed completely diligent on properly using them all the time, but it is a nice overview. 
+
+I will not delete the old blog, as it is still valuable, I am just going to create a post that points people to here.
+
+### As for the KB project
+
+I put the current `main` branch with full project info to a new branch called `main-en`, and on the [latest main branch](https://github.com/divakaivan/kb_project) I translated everything to Korean. 
+
+It is the same text, just in Korean so that it is better accepted by the competition assessors.
+
+### Got my 2nd MLx certificate
+
+![image](https://github.com/user-attachments/assets/8f52b1bd-0336-47c4-ba06-bf0d5c96d7e0)
+
+The final Oxford summer school course is 22-24 Aug and it is about [GenAI](https://www.oxfordml.school/genai) (Theory, Agents, Products) and I am really looking forward to that. Here are the speakers:
+
+<img width="1455" alt="image" src="https://github.com/user-attachments/assets/32f22e0c-e647-419e-9aca-6b5ac947eae2">
+
+And topics:
+* Advanced theoretical topics in representation learning (e.g., vision, language, multi-modal, …)
+* Agentic AI (e.g., agentic reasoning and design patterns)
+* Human+AI alignment
+* Building Gen. AI products — from model.fit() to market.fit()
+* Using SOTA foundation models (e.g., fine tuning, RAG, RLHF, prompt engineering, …)
+* Application of large frontier models in applied domains (e.g., medicine, finance, education, …)
+
+### Found OmdenaAI
+
+This company has [open projects](https://www.omdena.com/search?query=projects&focus=projects) where people can apply and (if selected) work as volunteers. I will keep an eye and apply if something interesting comes up.
+
+
+That is all for today!
+
+See you tomorrow :) 
