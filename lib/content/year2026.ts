@@ -31,7 +31,7 @@ const year2026 = `## Self-studying 2026
 - wrote this down at the start of Jan 2026
 - become a Kubestronaut
 - obtain my Stanford AI Professional Certificate
-- be part of and make a cool project
+- make a cool project
 `;
 
 export default year2026;
