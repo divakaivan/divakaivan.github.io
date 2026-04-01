@@ -1,4 +1,4 @@
-# terminal-cv 
+# terminal-cv
 
 A terminal-like personal website built with Next.js. Visitors explore your content using familiar Unix commands (`ls`, `cat`, `cd`).
 
