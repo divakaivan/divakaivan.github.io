@@ -30,7 +30,7 @@ const WELCOME = `\
 ||M |||y |||T |||e |||r |||m |||i |||n |||a |||l ||
 ||__|||__|||__|||__|||__|||__|||__|||__|||__|||__||
 |/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
-
+                                                                  
 Welcome! Type 'help' for available commands or 'ls' to explore.`;
 
 function getPrompt(path: string): string {
