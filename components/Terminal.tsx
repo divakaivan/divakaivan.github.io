@@ -244,7 +244,7 @@ export default function Terminal() {
   return (
     <div
       ref={containerRef}
-      className="h-screen overflow-y-auto bg-[#0d1117] text-green-400 font-mono text-sm cursor-text select-none"
+      className="h-screen overflow-y-auto bg-[#0d1117] text-green-400 font-mono text-sm cursor-text"
       onClick={focusInput}
     >
       <div className="max-w-4xl mx-auto p-4 pb-2">
@@ -261,7 +261,7 @@ export default function Terminal() {
               <span className="text-green-500 shrink-0 select-none">
                 {getPrompt(item.path)}
               </span>
-              <span className="text-white select-text">{item.command}</span>
+              <span className="text-white">{item.command}</span>
             </div>
             {/* Outputs */}
             {item.outputs.map((output, i) => (
@@ -281,7 +281,7 @@ export default function Terminal() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="bg-transparent text-white outline-none flex-1 min-w-0 caret-green-400 select-text"
+            className="bg-transparent text-white outline-none flex-1 min-w-0 caret-green-400"
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
@@ -310,7 +310,7 @@ export default function Terminal() {
             tabIndex={0}
             onKeyDown={handleLessKeyDown}
           >
-            <div className="max-w-4xl mx-auto select-text">
+            <div className="max-w-4xl mx-auto">
               <MarkdownRenderer content={lessMode.content} />
             </div>
           </div>
@@ -330,19 +330,19 @@ function OutputLine({ output }: { output: OutputEntry }) {
   switch (output.type) {
     case "text":
       return (
-        <pre className="text-green-300 pl-0 mt-1 mb-1 whitespace-pre-wrap font-mono text-sm select-text leading-relaxed">
+        <pre className="text-green-300 pl-0 mt-1 mb-1 whitespace-pre-wrap font-mono text-sm leading-relaxed">
           {output.content}
         </pre>
       );
     case "error":
       return (
-        <div className="text-red-400 pl-0 mt-1 mb-1 select-text">
+        <div className="text-red-400 pl-0 mt-1 mb-1">
           {output.content}
         </div>
       );
     case "markdown":
       return (
-        <div className="pl-0 mt-2 mb-3 select-text">
+        <div className="pl-0 mt-2 mb-3">
           <MarkdownRenderer content={output.content} />
         </div>
       );
@@ -394,7 +394,7 @@ function BatOutput({ content, filename }: { content: string; filename: string })
   const language = langMap[ext] ?? "text";
 
   return (
-    <div className="mt-2 mb-3 select-text font-mono text-xs">
+    <div className="mt-2 mb-3 font-mono text-xs">
       {/* bat-style header */}
       <div className="flex items-center gap-2 px-3 py-1 bg-[#1e2433] border border-gray-700 border-b-0 rounded-t text-gray-400">
         <span className="text-yellow-400">🦇</span>
