@@ -1,6 +1,6 @@
 const whoami = `# Your name
 
-Tp update this write markdown in `lib/content/whoami.ts`
+Tp update this write markdown in \`lib/content/whoami.ts\`
 
 ---
 
