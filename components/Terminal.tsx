@@ -10,12 +10,19 @@ import {
 } from "@/lib/commands";
 import { displayPath } from "@/lib/filesystem";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type HistoryItem = {
   id: number;
   command: string;
   path: string;
   outputs: OutputEntry[];
+};
+
+type LessMode = {
+  content: string;
+  filename: string;
 };
 
 const WELCOME = `\
@@ -42,10 +49,12 @@ export default function Terminal() {
   const [cmdHistory, setCmdHistory] = useState<string[]>(["ls"]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [idCounter, setIdCounter] = useState(1);
+  const [lessMode, setLessMode] = useState<LessMode | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lessScrollRef = useRef<HTMLDivElement>(null);
 
   // Keep input focused on mount
   useEffect(() => {
@@ -56,6 +65,15 @@ export default function Terminal() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
+
+  // Focus the less container when less mode is active so key events work
+  useEffect(() => {
+    if (lessMode) {
+      lessScrollRef.current?.focus();
+    } else {
+      inputRef.current?.focus();
+    }
+  }, [lessMode]);
 
   const submitCommand = useCallback(
     (raw: string) => {
@@ -70,6 +88,23 @@ export default function Terminal() {
       }
 
       const result = executeCommand(command, args, currentPath);
+
+      if (result.lessContent) {
+        // Enter less pager mode — record the command in history with no output
+        const newId = idCounter;
+        setIdCounter((n) => n + 1);
+        setHistory((prev) => [
+          ...prev,
+          { id: newId, command: trimmed, path: currentPath, outputs: [] },
+        ]);
+        if (trimmed) {
+          setCmdHistory((prev) => [trimmed, ...prev.slice(0, 99)]);
+        }
+        setHistoryIndex(-1);
+        setInput("");
+        setLessMode(result.lessContent);
+        return;
+      }
 
       const newId = idCounter;
       setIdCounter((n) => n + 1);
@@ -162,8 +197,48 @@ export default function Terminal() {
     [input, historyIndex, cmdHistory, submitCommand, currentPath, idCounter]
   );
 
+  // Handle keyboard events inside the less pager
+  const handleLessKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const el = lessScrollRef.current;
+      if (!el) return;
+
+      const pageSize = el.clientHeight * 0.9;
+
+      switch (e.key) {
+        case "q":
+        case "Q":
+          e.preventDefault();
+          setLessMode(null);
+          break;
+        case " ":
+        case "f":
+        case "F":
+        case "ArrowDown":
+          e.preventDefault();
+          el.scrollBy({ top: e.key === "ArrowDown" ? 40 : pageSize, behavior: "smooth" });
+          break;
+        case "b":
+        case "B":
+        case "ArrowUp":
+          e.preventDefault();
+          el.scrollBy({ top: e.key === "ArrowUp" ? -40 : -pageSize, behavior: "smooth" });
+          break;
+        case "Home":
+          e.preventDefault();
+          el.scrollTo({ top: 0, behavior: "smooth" });
+          break;
+        case "End":
+          e.preventDefault();
+          el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+          break;
+      }
+    },
+    []
+  );
+
   const focusInput = () => {
-    inputRef.current?.focus();
+    if (!lessMode) inputRef.current?.focus();
   };
 
   return (
@@ -218,6 +293,35 @@ export default function Terminal() {
         {/* Scroll anchor */}
         <div ref={bottomRef} className="h-4" />
       </div>
+
+      {/* Less pager overlay */}
+      {lessMode && (
+        <div className="fixed inset-0 bg-[#0d1117] flex flex-col z-50">
+          {/* Header bar */}
+          <div className="flex items-center gap-4 px-4 py-1 bg-[#161b22] border-b border-gray-700 text-xs text-gray-400 shrink-0">
+            <span className="text-yellow-400 font-semibold">{lessMode.filename}</span>
+            <span className="ml-auto">q: quit  space/f: forward  b: back  ↑↓: scroll</span>
+          </div>
+
+          {/* Scrollable content */}
+          <div
+            ref={lessScrollRef}
+            className="flex-1 overflow-y-auto px-6 py-4 outline-none"
+            tabIndex={0}
+            onKeyDown={handleLessKeyDown}
+          >
+            <div className="max-w-4xl mx-auto select-text">
+              <MarkdownRenderer content={lessMode.content} />
+            </div>
+          </div>
+
+          {/* Status bar */}
+          <div className="shrink-0 px-4 py-1 bg-[#161b22] border-t border-gray-700 text-xs text-gray-500">
+            <span className="text-green-400">:</span>
+            <span className="ml-2">Press <kbd className="bg-gray-700 text-gray-200 px-1 rounded">q</kbd> to quit</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -242,6 +346,8 @@ function OutputLine({ output }: { output: OutputEntry }) {
           <MarkdownRenderer content={output.content} />
         </div>
       );
+    case "bat":
+      return <BatOutput content={output.content} filename={output.filename} />;
     case "ls":
       return (
         <div className="mt-1 mb-1 flex flex-wrap gap-x-6 gap-y-1">
@@ -263,3 +369,63 @@ function OutputLine({ output }: { output: OutputEntry }) {
       return null;
   }
 }
+
+function BatOutput({ content, filename }: { content: string; filename: string }) {
+  const lines = content.split("\n");
+  const lineCount = lines.length;
+
+  // Detect language from filename extension
+  const ext = filename.split(".").pop() ?? "";
+  const langMap: Record<string, string> = {
+    md: "markdown",
+    ts: "typescript",
+    tsx: "tsx",
+    js: "javascript",
+    jsx: "jsx",
+    py: "python",
+    sh: "bash",
+    json: "json",
+    yaml: "yaml",
+    yml: "yaml",
+    css: "css",
+    html: "html",
+    sql: "sql",
+  };
+  const language = langMap[ext] ?? "text";
+
+  return (
+    <div className="mt-2 mb-3 select-text font-mono text-xs">
+      {/* bat-style header */}
+      <div className="flex items-center gap-2 px-3 py-1 bg-[#1e2433] border border-gray-700 border-b-0 rounded-t text-gray-400">
+        <span className="text-yellow-400">🦇</span>
+        <span className="text-white font-semibold">{filename}</span>
+        <span className="ml-auto text-gray-500">{lineCount} lines</span>
+      </div>
+
+      {/* Line-numbered code */}
+      <div className="relative border border-gray-700 rounded-b overflow-hidden">
+        <SyntaxHighlighter
+          language={language}
+          style={vscDarkPlus}
+          showLineNumbers
+          lineNumberStyle={{
+            color: "#4b5563",
+            minWidth: "2.5em",
+            paddingRight: "1em",
+            userSelect: "none",
+          }}
+          customStyle={{
+            margin: 0,
+            borderRadius: 0,
+            fontSize: "0.8em",
+            background: "#0d1117",
+          }}
+          wrapLongLines
+        >
+          {content}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+}
+
