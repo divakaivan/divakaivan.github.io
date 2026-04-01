@@ -1,6 +1,7 @@
 import whoami from "./content/whoami";
 import posts2024 from "./content/posts2024";
 import year2025 from "./content/year2025";
+import year2026 from "./content/year2026";
 import projects from "./content/projects";
 
 export type FileNode = {
@@ -39,6 +40,7 @@ export const filesystem: DirectoryNode = {
       ),
     },
     "2025.md": { type: "file", content: year2025 },
+    "2026.md": { type: "file", content: year2026 },
     projects: {
       type: "directory",
       children: Object.fromEntries(
