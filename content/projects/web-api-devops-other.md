@@ -1,6 +1,17 @@
 ## Web/API/DevOps/Other Projects
 
 <div class="project-item">
+    <h3>EC2 K8s Operator</h3>
+    <p>
+      <li>Developed a Kubernetes operator to manage AWS EC2 instances as custom resources, enabling infrastructure provisioning and deletion directly via kubectl</li>
+      <li>Packaged and distributed via Helm for easy installation and deployment, simplifying adoption and setup</li>
+      <li>Designed and implemented a CRD (EC2Instance) with automated lifecycle management, including instance creation, state tracking, and termination via AWS APIs</li>
+    </p>
+    <p><b>Tech: Go, Kubernetes, Helm, Kubebuilder, AWS</b></p>
+    <a href="https://github.com/divakaivan/ec2instance-k8s-operator" target="_blank">View Project</a>
+  </div>
+
+<div class="project-item">
     <h3>RSS Aggregator API</h3>
     <p>
       <li>Developed an API that allows users to authenticate, scrape RSS feeds, follow feeds of their choice, and view posts from those feeds</li>
