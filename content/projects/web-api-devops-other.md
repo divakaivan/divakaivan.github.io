@@ -7,7 +7,7 @@
       <li>Packaged and distributed via Helm for easy installation and deployment, simplifying adoption and setup</li>
       <li>Designed and implemented a CRD (EC2Instance) with automated lifecycle management, including instance creation, state tracking, and termination via AWS APIs</li>
     </p>
-    <p><b>Tech: Go, Kubernetes, Helm, Kubebuilder, AWS</b></p>
+    <p><b>Tech: Go, Kubernetes, Helm, Kubebuilder, AWS, Github Actions, Docker</b></p>
     <a href="https://github.com/divakaivan/ec2instance-k8s-operator" target="_blank">View Project</a>
   </div>
 
