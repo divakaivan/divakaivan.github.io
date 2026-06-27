@@ -1,8 +1,12 @@
 const year2026 = `## Self-studying 2026
 
-*updated 2nd Apr 2026*
+*updated 27nd Jun 2026*
 
 ## Monthly updates
+
+### April & May 
+
+- Decided to learn a bit of Japanese as I found this amazing game - [Wagotabi](https://www.wagotabi.com/) - an adventure game going around actual JP prefectures, interacting with ingame characters and learning grammar/vocab (great gamified way to learn a language) + did daily Kanji studies with Tanaka san's [Kanji camps 1&2](https://japanese-tanaka-san.com/materials/kanjicamp). As Korean and Japanese are quite similar I played the game with Korean as a base language as making grammar comparisons was so much easier + there were plenty of vocab similarities which also helped me keep my Korean going as I don't speak much these days
 
 ### March
 
