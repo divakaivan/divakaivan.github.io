@@ -1,6 +1,6 @@
 const year2026 = `## Self-studying 2026
 
-*updated 27nd Jun 2026*
+*updated 2nd Jun 2026*
 
 ## Monthly updates
 
