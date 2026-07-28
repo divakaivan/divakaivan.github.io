@@ -1,8 +1,13 @@
 const year2026 = `## Self-studying 2026
 
-*updated 2nd Jun 2026*
+*updated 2nd Jul 2026*
 
 ## Monthly updates
+
+### June
+
+- read Building Generative AI Services with FastAPI
+- went through some of the videos in this amazing playlist - [Backend from first principles](https://www.youtube.com/playlist?list=PLui3EUkuMTPgZcV0QhQrOcwMPcBCcd_Q1)
 
 ### April & May 
 
