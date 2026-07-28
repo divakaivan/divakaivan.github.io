@@ -7,7 +7,7 @@ const year2026 = `## Self-studying 2026
 ### June
 
 - read Building Generative AI Services with FastAPI
-- went through some of the videos in this amazing playlist - [Backend from first principles](https://www.youtube.com/playlist?list=PLui3EUkuMTPgZcV0QhQrOcwMPcBCcd_Q1)
+- started the Cyber Security 101 path on tryhackme
 
 ### April & May 
 
