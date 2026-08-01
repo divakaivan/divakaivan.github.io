@@ -1,8 +1,15 @@
 const year2026 = `## Self-studying 2026
 
-*updated 2nd Jul 2026*
+*updated 1st Aug 2026*
 
 ## Monthly updates
+
+### July
+
+- finished TryHackMe's [DevSecOps](https://tryhackme-certificates.s3-eu-west-1.amazonaws.com/THM-NGEUYQDGZB.pdf) module
+- finished TryHackMe's [AI Security](https://tryhackme-certificates.s3-eu-west-1.amazonaws.com/THM-7HBH15SEC3.pdf) module
+- started again going over Writing an interpreter in Go (third time's the charm :D ; 1st time - I read it halfway, 2nd time - I followed along and rushed the end but understood only half, now... it's going better)
+- followed along this nice guide on [How to Build Kubernetes Networking Without Kubernetes: Do What the CNI Does By Hand](https://www.freecodecamp.org/news/how-to-build-kubernetes-networking-without-kubernetes-do-what-the-cni-does-by-hand/)
 
 ### June
 
