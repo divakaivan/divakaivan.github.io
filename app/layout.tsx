@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script
+        <script
           src="https://www.googletagmanager.com/gtag/js?id=G-WWES1B0RFM"
           strategy="afterInteractive"
         />
@@ -34,7 +34,7 @@ export default function RootLayout({
 
             gtag('config', 'G-WWES1B0RFM');
           `}
-        </Script>
+        </script>
       </head>
       <body className={`${geistMono.variable} font-mono antialiased`}>
         {children}
