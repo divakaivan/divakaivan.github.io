@@ -20,6 +20,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-WWES1B0RFM"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-WWES1B0RFM');
+          `}
+        </Script>
+      </head>
       <body className={`${geistMono.variable} font-mono antialiased`}>
         {children}
       </body>
