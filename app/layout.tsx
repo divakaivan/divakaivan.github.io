@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 
 const geistMono = localFont({
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
+        <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-WWES1B0RFM"
           strategy="afterInteractive"
         />
@@ -34,7 +35,7 @@ export default function RootLayout({
 
             gtag('config', 'G-WWES1B0RFM');
           `}
-        </script>
+        </Script>
       </head>
       <body className={`${geistMono.variable} font-mono antialiased`}>
         {children}
