@@ -1,8 +1,13 @@
 const year2026 = `## Self-studying 2026
 
-*updated 1st Aug 2026*
+*updated 1st Sep 2026*
 
 ## Monthly updates
+
+### Setptember
+
+- tried to contribute a bit towards bring ADK and AgentCore memory together - [allowing an adk agent to store short-term memory in aws](https://github.com/google/adk-python/issues/6920)
+- i went over the first third of the interpreter in go book but I keep re-reading the code as I believe I understand the ideas behind a lexer, parser - but if I try to implement it myself I go blank... and I want to be able to do it without AI support
 
 ### July
 
