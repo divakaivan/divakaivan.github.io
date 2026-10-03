@@ -9,7 +9,7 @@ const year2026 = `## Self-studying 2026
 - read through Berkley's Intro to Networking course [book](https://textbook.cs168.io/) - definitely helped me clarify on what each TCP/IP layer's role is when sending a packet. Also the sections on ARP, DNS and NAT - Definitely a resource I will refer to in the future
 - read [Kubernetes and Networking](https://learning.oreilly.com/library/view/networking-and-kubernetes/9781492081647/) - learned why we moved on from iptables in k8s (i also watched [this video](https://www.youtube.com/watch?v=yOGHb2HjslY&t=1772s&pp=ygUMazhzIGlwdGFibGVz)) and chapter 2 talked through each word in the output of some of the popular linux networking commands (ping, traceroute, nmap, telnet, dig, netstat, netcat, curl)
 - learned about [conntrack](https://www.markbetz.net/2023/12/12/exhausting-conntrack-table-space-crippled-our-k8s-cluster/?utm_campaign=conntrack-exhaustion-in-kubernetes-causes-and-fixes&utm_medium=referral&utm_source=newsletter.devopscube.com)
-- started learning (reading the docs and playing a kind cluster) about Envoy's [AgentRouter](https://theagentrouter.ai/) (previously Envoy AI Gateway)
+- started learning (reading the docs and playing with it in a kind cluster) about Envoy's [AgentRouter](https://theagentrouter.ai/) (previously Envoy AI Gateway)
 
 ### August
 
